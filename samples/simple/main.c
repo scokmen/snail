@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <uv.h>
+#include <picohttpparser.h>
 
 int main() {
     uv_loop_t *loop = malloc(sizeof(uv_loop_t));
