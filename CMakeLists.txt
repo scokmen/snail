@@ -2,22 +2,45 @@ cmake_minimum_required(VERSION 3.28)
 project(snail LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
-set(INCLUDE_FOLDER "lib/include")
+set(LIBRARY_PATH "lib")
+set(VENDORS_PATH "vendors")
 
 # LIBUV
 # https://github.com/libuv/libuv
 # Include libuv project
-add_subdirectory("${INCLUDE_FOLDER}/libuv" "${INCLUDE_FOLDER}/libuv")
+add_subdirectory("${VENDORS_PATH}/libuv" "${VENDORS_PATH}/libuv")
 
 # PICO_HTTP_PARSER
 # https://github.com/h2o/picohttpparser
 # Include picohttpparser project
-include_directories("${INCLUDE_FOLDER}/picohttpparser")
-add_library(pico "${INCLUDE_FOLDER}/picohttpparser/picohttpparser.c" "${INCLUDE_FOLDER}/picohttpparser/picohttpparser.h")
-set_target_properties(pico PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${INCLUDE_FOLDER}/picohttpparser")
+add_library(pico STATIC
+        "${VENDORS_PATH}/picohttpparser/picohttpparser.c"
+        "${VENDORS_PATH}/picohttpparser/picohttpparser.h")
+set_target_properties(pico PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${VENDORS_PATH}/picohttpparser")
+target_include_directories(pico
+        INTERFACE "${VENDORS_PATH}/picohttpparser")
 
-# Initialize executable
-add_executable(main samples/simple/main.c)
+# SNAIL
+# Include snail project
+add_library(snail STATIC
+        lib/snail.h
+        lib/core/http/s_sock_loop.c
+        lib/core/http/s_sock_loop.h
+        lib/core/s_core_buf.h
+        lib/core/s_core_buf.c
+        lib/core/http/s_http_serv.h
+        lib/core/http/s_http_serv.c
+)
+set_target_properties(snail PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_PATH}")
+target_include_directories(snail
+        INTERFACE "${LIBRARY_PATH}"
+        PRIVATE   "${LIBRARY_PATH}/core"
+        PRIVATE   "${LIBRARY_PATH}/core/http")
 
-# Link LIBUV
-target_link_libraries(main uv pico)
+target_link_libraries(snail pico uv)
+
+add_executable(sample_1 samples/simple/main.c)
+
+target_link_libraries(sample_1 uv pico snail)

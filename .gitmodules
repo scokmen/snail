@@ -1,6 +1,6 @@
 [submodule "lib/include/libuv"]
-	path = lib/include/libuv
+	path = vendors/libuv
 	url = https://github.com/libuv/libuv.git
 [submodule "lib/include/picohttpparser"]
-	path = lib/include/picohttpparser
+	path = vendors/picohttpparser
 	url = https://github.com/h2o/picohttpparser
