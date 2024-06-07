@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "s_core_buf.h"
 #include "../snail.h"
+#include "s_core_buf.h"
 #include "s_http_serv.h"
 #include "s_sock_loop.h"
 
@@ -90,7 +90,7 @@ static void handle_response(uv_work_t *req, int status) {
     uv_buf_t buf = uv_buf_init(data->res_buf.buffer, data->res_buf.size + 1);
     data->write_req = malloc(sizeof(uv_write_t));
     if (data->write_req == NULL) {
-        fprintf(stderr, "cannot allocate memory %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot allocate memory")
         s_sock_loop_data_free(data);
         return;
     }
@@ -121,7 +121,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     data = stream->data;
 
     if (buf_size == -1 || buf_size == UV_EOF) {
-        fprintf(stderr, "cannot read socket %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot read socket")
         free(buf->base);
         s_sock_loop_data_free(data);
         return;
@@ -132,7 +132,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     } else if (buf_size > 0) {
         int extended_buf = s_buf_extend(&data->req_buf, buf->base, buf_size);
         if (extended_buf < 0) {
-            fprintf(stderr, "cannot read socket %s:%d", __FILE__, __LINE__);
+            LOG_ERR("cannot read socket")
             free(buf->base);
             s_sock_loop_data_free(data);
             return;
@@ -142,7 +142,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     if (!data->work_started && buf_size < S_INC_SOCKET_BUF_SIZE) {
         data->work_req = malloc(sizeof(uv_work_t));
         if (data->work_req == NULL) {
-            fprintf(stderr, "cannot create request %s:%d", __FILE__, __LINE__);
+            LOG_ERR("cannot create request")
             free(buf->base);
             s_sock_loop_data_free(data);
             return;
@@ -160,19 +160,19 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
  */
 static void connection_callback(uv_stream_t *serverInstance, int status) {
     if (status == -1) {
-        fprintf(stderr, "cannot accept the connection %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot accept the connection")
         return;
     }
 
     uv_tcp_t *tcp_client = malloc(sizeof(uv_tcp_t));
     if (tcp_client == NULL) {
-        fprintf(stderr, "cannot allocate memory %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot allocate memory")
         return;
     }
 
     s_sock_loop_data *event_data = malloc(sizeof(s_sock_loop_data));
     if (event_data == NULL) {
-        fprintf(stderr, "cannot allocate memory %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot allocate memory")
         return;
     }
 
@@ -183,7 +183,7 @@ static void connection_callback(uv_stream_t *serverInstance, int status) {
     if (uv_accept(serverInstance, (uv_stream_t *) tcp_client) == 0) {
         uv_read_start((uv_stream_t *) tcp_client, allocate_buffer_callback, socket_read_callback);
     } else {
-        fprintf(stderr, "cannot accept the connection %s:%d", __FILE__, __LINE__);
+        LOG_ERR("cannot accept the connection")
         s_sock_loop_data_free(event_data);
     }
 }

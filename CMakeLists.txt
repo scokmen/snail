@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.28)
 project(snail LANGUAGES C)
 
+include(CMakeDependentOption)
+
 set(CMAKE_C_STANDARD 11)
 set(LIBRARY_PATH "lib")
 set(VENDORS_PATH "vendors")
+
+# -BUILD_SAMPLES=ON|OFF
+cmake_dependent_option(S_BUILD_SAMPLES "Build sample projects" ON "BUILD_SAMPLES" OFF)
 
 # LIBUV
 # https://github.com/libuv/libuv
@@ -32,8 +37,6 @@ add_library(snail STATIC
         lib/core/http/s_http_serv.h
         lib/core/http/s_http_serv.c
 )
-set_target_properties(snail PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_PATH}")
 target_include_directories(snail
         INTERFACE "${LIBRARY_PATH}"
         PRIVATE   "${LIBRARY_PATH}/core"
@@ -41,6 +44,7 @@ target_include_directories(snail
 
 target_link_libraries(snail pico uv)
 
-add_executable(sample_1 samples/simple/main.c)
-
-target_link_libraries(sample_1 uv pico snail)
+if(S_BUILD_SAMPLES)
+    add_executable(sample_1 samples/simple/main.c)
+    target_link_libraries(sample_1 uv pico snail)
+endif ()
