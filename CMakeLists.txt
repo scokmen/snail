@@ -36,6 +36,7 @@ add_library(snail STATIC
         lib/core/s_core_buf.c
         lib/core/http/s_http_serv.h
         lib/core/http/s_http_serv.c
+        lib/s_attributes.h
 )
 target_include_directories(snail
         INTERFACE "${LIBRARY_PATH}"

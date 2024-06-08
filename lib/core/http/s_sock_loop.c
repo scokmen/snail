@@ -2,7 +2,6 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
 #include "../snail.h"
 #include "s_core_buf.h"
 #include "s_http_serv.h"
@@ -59,12 +58,11 @@ static void s_sock_loop_data_free(s_sock_loop_data *data) {
     free(data);
 }
 
-
 /*
  * UV: uv_write_cb
  * https://docs.libuv.org/en/v1.x/stream.html#c.uv_write_cb
  */
-static void handle_response_sent(uv_write_t *req, int status) {
+static void handle_response_sent(uv_write_t *req, S_UNUSED int status) {
     s_sock_loop_data_free((s_sock_loop_data *) req->data);
 }
 
@@ -102,7 +100,7 @@ static void handle_response(uv_work_t *req, int status) {
  * UV: uv_alloc_cb
  * https://docs.libuv.org/en/v1.x/handle.html#c.uv_alloc_cb
  */
-static void allocate_buffer_callback(uv_handle_t *handle, size_t size, uv_buf_t *buf) {
+static void allocate_buffer_callback(S_UNUSED uv_handle_t *handle, S_UNUSED size_t size, uv_buf_t *buf) {
     char *base = (char *) calloc(1, S_INC_SOCKET_BUF_SIZE);
 
     if (base == NULL)
@@ -128,7 +126,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     }
 
     if (data->req_buf.size == 0) {
-        data->req_buf = s_buf_init(buf->base, buf_size, S_INC_SOCKET_MAX_SIZE);
+        data->req_buf = s_buf_init(buf->base, buf_size, S_HTTP_MAX_REQUEST_SIZE);
     } else if (buf_size > 0) {
         int extended_buf = s_buf_extend(&data->req_buf, buf->base, buf_size);
         if (extended_buf < 0) {

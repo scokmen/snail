@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-
 #include "s_core_buf.h"
 
 s_buf s_buf_init(char *const buf, size_t size, size_t cap) {

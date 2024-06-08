@@ -2,7 +2,6 @@
 #define SNAIL_S_CORE_BUF_H
 
 #include <stddef.h>
-
 #include "../snail.h"
 
 #define S_BUF_OVERLOAD (-1)
