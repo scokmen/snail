@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(snail LANGUAGES C)
 
+include(FetchContent)
 include(CMakeDependentOption)
 
 set(CMAKE_C_STANDARD 11)
@@ -21,8 +22,10 @@ add_subdirectory("${VENDORS_PATH}/libuv" "${VENDORS_PATH}/libuv")
 add_library(pico STATIC
         "${VENDORS_PATH}/picohttpparser/picohttpparser.c"
         "${VENDORS_PATH}/picohttpparser/picohttpparser.h")
+
 set_target_properties(pico PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${VENDORS_PATH}/picohttpparser")
+
 target_include_directories(pico
         INTERFACE "${VENDORS_PATH}/picohttpparser")
 
@@ -32,20 +35,17 @@ add_library(snail STATIC
         lib/snail.h
         lib/core/http/s_sock_loop.c
         lib/core/http/s_sock_loop.h
-        lib/core/s_core_buf.h
-        lib/core/s_core_buf.c
-        lib/core/http/s_http_serv.h
-        lib/core/http/s_http_serv.c
         lib/s_attributes.h
 )
+
 target_include_directories(snail
         INTERFACE "${LIBRARY_PATH}"
-        PRIVATE   "${LIBRARY_PATH}/core"
-        PRIVATE   "${LIBRARY_PATH}/core/http")
+        PRIVATE "${LIBRARY_PATH}/core"
+        PRIVATE "${LIBRARY_PATH}/core/http")
 
 target_link_libraries(snail pico uv)
 
 if(S_BUILD_SAMPLES)
-    add_executable(sample_1 samples/simple/main.c)
-    target_link_libraries(sample_1 uv pico snail)
+  add_executable(sample_1 samples/simple/main.c)
+  target_link_libraries(sample_1 uv pico snail)
 endif ()

@@ -1,19 +1,27 @@
 #ifndef SNAIL_S_ATTRIBUTES_H
 #define SNAIL_S_ATTRIBUTES_H
 
-#ifndef S_BUFFER
+#ifndef SN_BUFFER
 #if defined(__GNUC__)
-#define S_BUF_AREA __attribute__ ((nonstring))
+#define SN_BUFFER __attribute__ ((nonstring))
 #else
-#define S_BUF_AREA
+#define SN_BUFFER
 #endif
 #endif
 
-#ifndef S_UNUSED
+#ifndef SN_UNUSED
 #if defined(__GNUC__)
-#define S_UNUSED __attribute__((unused))
+#define SN_UNUSED __attribute__((unused))
 #else
-#define S_NOT_USED
+#define SN_UNUSED
+#endif
+#endif
+
+#ifndef SN_INLINE
+#if defined(__GNUC__)
+#define SN_INLINE __attribute__((always_inline))
+#else
+#define SN_INLINE
 #endif
 #endif
 
