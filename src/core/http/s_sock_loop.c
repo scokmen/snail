@@ -75,8 +75,11 @@ static void s_sock_loop_data_free(s_sock_loop_data *data) {
     free(data);
 }
 
-static inline SN_INLINE void fail_fast(const char *message, s_sock_loop_data *data, const uv_buf_t *buffer) {
+static inline SN_INLINE void fail_fast(const char *message, s_sock_loop_data *data, const uv_buf_t *buffer, uv_stream_t *stream) {
     fprintf(stderr, "%s %s:%d\n", message, __FILE__, __LINE__);
+    if (stream != NULL) {
+        uv_read_stop(stream);
+    }
     if (data != NULL) {
         s_sock_loop_data_free(data);
     }
@@ -110,13 +113,13 @@ static void handle_request(uv_work_t *work_req) {
 static void handle_response(uv_work_t *req, int status) {
     s_sock_loop_data *data = req->data;
     if (status == UV_ECANCELED) {
-        fail_fast("Request was cancelled!", data, NULL);
+        fail_fast("Request was cancelled!", data, NULL, NULL);
         return;
     }
     uv_buf_t buf = uv_buf_init(data->http_data->response_buf, strlen(data->http_data->response_buf) + 1);
     data->write_req = malloc(sizeof(uv_write_t));
     if (data->write_req == NULL) {
-        fail_fast("Cannot allocate memory!", data, NULL);
+        fail_fast("Cannot allocate memory!", data, NULL, NULL);
         return;
     }
     data->write_req->data = data;
@@ -145,8 +148,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     s_sock_loop_data *data = stream->data;
 
     if (buf_size == -1 || buf_size == UV_EOF) {
-        fail_fast("Cannot read socket!", data, buf);
-        uv_read_stop(stream);
+        fail_fast("Cannot read socket!", data, buf, stream);
         return;
     }
 
@@ -158,8 +160,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
         data->http_data = malloc(sizeof(s_sock_http_data));
         data->http_data->header_length = S_HTTP_MAX_HEADER_COUNT;
         if (data->http_data == NULL) {
-            fail_fast("Cannot allocate memory!", data, buf);
-            uv_read_stop(stream);
+            fail_fast("Cannot allocate memory!", data, buf, stream);
             return;
         }
     }
@@ -172,8 +173,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     } else {
         void *ext = realloc(http_data->request_buf, http_data->buf_length);
         if (ext == NULL) {
-            fail_fast("Cannot allocate memory!", data, buf);
-            uv_read_stop(stream);
+            fail_fast("Cannot allocate memory!", data, buf, stream);
             return;
         }
         http_data->request_buf = ext;
@@ -187,8 +187,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
                                      http_data->buf_cursor);
 
     if (req_size == -1) {
-        fail_fast("Cannot parse the HTTP request!", data, buf);
-        uv_read_stop(stream);
+        fail_fast("Cannot parse the HTTP request!", data, buf, stream);
         return;
     }
 
@@ -198,8 +197,7 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
 
     data->work_req = malloc(sizeof(uv_work_t));
     if (data->work_req == NULL) {
-        fail_fast("Cannot create request!", data, buf);
-        uv_read_stop(stream);
+        fail_fast("Cannot create request!", data, buf, stream);
         return;
     }
     data->work_req->data = data;
@@ -214,19 +212,19 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
  */
 static void connection_callback(uv_stream_t *server, int status) {
     if (status == -1) {
-        fail_fast("Cannot accept connection!", NULL, NULL);
+        fail_fast("Cannot accept connection!", NULL, NULL, NULL);
         return;
     }
 
     s_sock_loop_data *event_data = malloc(sizeof(s_sock_loop_data));
     if (event_data == NULL) {
-        fail_fast("Cannot allocate memory!", NULL, NULL);
+        fail_fast("Cannot allocate memory!", NULL, NULL, NULL);
         return;
     }
 
     uv_tcp_t *tcp_client = malloc(sizeof(uv_tcp_t));
     if (tcp_client == NULL) {
-        fail_fast("Cannot allocate memory!", NULL, NULL);
+        fail_fast("Cannot allocate memory!", NULL, NULL, NULL);
         return;
     }
 
@@ -237,7 +235,7 @@ static void connection_callback(uv_stream_t *server, int status) {
     if (uv_accept(server, (uv_stream_t *) tcp_client) == 0) {
         uv_read_start((uv_stream_t *) tcp_client, allocate_buffer_callback, socket_read_callback);
     } else {
-        fail_fast("Cannot accept connection!", event_data, NULL);
+        fail_fast("Cannot accept connection!", event_data, NULL, NULL);
     }
 }
 

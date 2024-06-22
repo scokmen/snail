@@ -5,8 +5,10 @@ include(FetchContent)
 include(CMakeDependentOption)
 
 set(CMAKE_C_STANDARD 11)
-set(LIBRARY_PATH "lib")
+set(LIBRARY_PATH "src")
 set(VENDORS_PATH "vendors")
+
+enable_testing()
 
 # -BUILD_SAMPLES=ON|OFF
 cmake_dependent_option(S_BUILD_SAMPLES "Build sample projects" ON "BUILD_SAMPLES" OFF)
@@ -32,10 +34,10 @@ target_include_directories(pico
 # SNAIL
 # Include snail project
 add_library(snail STATIC
-        lib/snail.h
-        lib/core/http/s_sock_loop.c
-        lib/core/http/s_sock_loop.h
-        lib/s_attributes.h
+        src/snail.h
+        src/core/http/s_sock_loop.c
+        src/core/http/s_sock_loop.h
+        src/s_attributes.h
 )
 
 target_include_directories(snail
@@ -49,3 +51,13 @@ if(S_BUILD_SAMPLES)
   add_executable(sample_1 samples/simple/main.c)
   target_link_libraries(sample_1 uv pico snail)
 endif ()
+
+# SNAIL_TEST
+# Include snail test project
+add_executable(snail_test test/s_sock_loop_test.c)
+target_link_libraries(snail_test PRIVATE snail)
+
+add_test(
+        NAME snail_test
+        COMMAND $<TARGET_FILE:snail_test>
+)
