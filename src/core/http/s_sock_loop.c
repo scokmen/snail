@@ -158,11 +158,11 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
 
     if (data->http_data == NULL) {
         data->http_data = malloc(sizeof(s_sock_http_data));
-        data->http_data->header_length = S_HTTP_MAX_HEADER_COUNT;
         if (data->http_data == NULL) {
             fail_fast("Cannot allocate memory!", data, buf, stream);
             return;
         }
+        data->http_data->header_length = S_HTTP_MAX_HEADER_COUNT;
     }
 
     s_sock_http_data *http_data = data->http_data;

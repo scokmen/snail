@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
-#include <errno.h>
+#include "test_runner.h"
 
 #define RECV_MAX_BUF (1024)
 
@@ -98,26 +98,76 @@ int start_server(int port) {
     return s_listen(port);
 }
 
-int run_tests() {
-    socket_handler_t sock_fd = connect_server("0.0.0.0", "3000", 5, 1);
-
-    if (sock_fd < 0) {
-        return -1;
-    }
-
+test_result minimal_http_request_case(const void *args) {
     int http_code;
     ssize_t byte_sent;
-    char *header = "GET /index.html HTTP/1.1\r\n\r\n";
+    socket_handler_t sock_fd;
+    char *http_request = "GET /index.html HTTP/1.1\r\n\r\n";
 
-    byte_sent = send(sock_fd, header, strlen(header), 0);
+    sock_fd = connect_server("0.0.0.0", "3000", 5, 1);
+
+    if (sock_fd < 0) {
+        return test_result_new(false, "Cannot create socket!");
+    }
+
+    byte_sent = send(sock_fd, http_request, strlen(http_request), 0);
     if (byte_sent < 0) {
-        fprintf(stderr, "Cannot send data: %s", strerror(errno));
-        return -1;
+        close(sock_fd);
+        return test_result_new(false, "Cannot send data!");
     }
 
     http_code = read_socket(sock_fd);
 
-    return http_code == 200;
+    close(sock_fd);
+
+    if (http_code == 200) {
+        return test_result_new(true, "SUCCESS");
+    }
+
+    return test_result_new(false, "Expected 200");
+}
+
+test_result minimal_http_request_case_partial(const void *args) {
+    int http_code;
+    ssize_t byte_sent;
+    socket_handler_t sock_fd;
+    char *partial_http_request[] = {"G", "ET /index.ht", "ml HTTP/1.", "1\r\n", "\r\n"};
+
+    sock_fd = connect_server("0.0.0.0", "3000", 5, 1);
+
+    if (sock_fd < 0) {
+        return test_result_new(false, "Cannot create socket!");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        byte_sent = send(sock_fd, partial_http_request[i], strlen(partial_http_request[i]), 0);
+        if (byte_sent < 0) {
+            close(sock_fd);
+            return test_result_new(false, "Cannot send data!");
+        }
+    }
+
+    http_code = read_socket(sock_fd);
+
+    close(sock_fd);
+
+    if (http_code == 200) {
+        return test_result_new(true, "SUCCESS");
+    }
+
+    return test_result_new(false, "Expected 200");
+}
+
+int run_tests() {
+    test_suit *suit = test_suit_new("HTTP PARSE SUIT");
+
+    test_suit_add(suit,
+                  test_case_new("Minimal HTTP Request", NULL, minimal_http_request_case));
+
+    test_suit_add(suit,
+                  test_case_new("Minimal HTTP Request - Partial", NULL, minimal_http_request_case_partial));
+
+    return test_suit_run(suit);
 }
 
 int main() {
@@ -134,7 +184,8 @@ int main() {
     }
 
     int status = run_tests();
-    printf("STATUS %d", status);
+
     kill(pid, SIGTERM);
-    exit(status == 1 ? EXIT_SUCCESS : EXIT_FAILURE);
+
+    return status == 1 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

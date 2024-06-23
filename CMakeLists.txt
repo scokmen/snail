@@ -54,7 +54,9 @@ endif ()
 
 # SNAIL_TEST
 # Include snail test project
-add_executable(snail_test test/s_sock_loop_test.c)
+add_executable(snail_test test/s_sock_loop_test.c
+        test/test_runner.h
+        test/test_runner.c)
 target_link_libraries(snail_test PRIVATE snail)
 
 add_test(
