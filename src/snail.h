@@ -1,8 +1,25 @@
 #ifndef SNAIL_SNAIL_H
 #define SNAIL_SNAIL_H
 
-#include <stddef.h>
-#include "s_attributes.h"
+
+#if defined __has_attribute
+#  if __has_attribute (nonstring)
+#    define SN_BUFFER __attribute__ ((nonstring))
+#  else
+#    define SN_BUFFER
+#  endif
+#  if __has_attribute (unused)
+#    define SN_UNUSED __attribute__ ((unused))
+#  else
+#    define SN_UNUSED
+#  endif
+#  if __has_attribute (always_inline)
+#    define SN_INLINE __attribute__ ((always_inline))
+#  else
+#    define SN_INLINE
+#  endif
+#endif
+
 
 /*
  * Platform hard limits.

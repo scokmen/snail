@@ -152,10 +152,6 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
         return;
     }
 
-    if (data != NULL && data->work_started == true) {
-        return;
-    }
-
     if (data->http_data == NULL) {
         data->http_data = malloc(sizeof(s_sock_http_data));
         if (data->http_data == NULL) {
@@ -171,12 +167,12 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     if (http_data->request_buf == NULL) {
         http_data->request_buf = buf->base;
     } else {
-        void *ext = realloc(http_data->request_buf, http_data->buf_length);
-        if (ext == NULL) {
+        void *allocated_memory = realloc(http_data->request_buf, http_data->buf_length);
+        if (allocated_memory == NULL) {
             fail_fast("Cannot allocate memory!", data, buf, stream);
             return;
         }
-        http_data->request_buf = ext;
+        http_data->request_buf = allocated_memory;
         memcpy(http_data->request_buf + http_data->buf_cursor, buf->base, buf_size);
     }
 
