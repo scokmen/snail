@@ -46,7 +46,8 @@ target_include_directories(pico
 add_library(snail STATIC
         src/snail.h
         src/core/http/s_sock_loop.c
-        src/core/http/s_sock_loop.h
+        src/core/s_logger.h
+        src/core/s_logger.c
 )
 
 target_include_directories(snail

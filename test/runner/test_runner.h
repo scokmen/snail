@@ -6,48 +6,51 @@
 
 #if defined __has_attribute
 #  if __has_attribute (format)
-#    define SN_FORMAT_FN(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
+#    define TR_FORMAT(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
 #  endif
 #endif
 
 #define MAX_CASE_IN_SUIT (32)
-#define TEST_OUT_MAX_LEN (256)
 
-typedef struct test_result {
+typedef struct tr_test_result {
     bool status;
     void *data;
     const char *output;
-} test_result;
+} tr_test_result;
 
-typedef test_result (*test_tear_up)();
+typedef tr_test_result (*tr_tear_up_callback)();
 
-typedef test_result (*test_callback)(const void *args);
+typedef tr_test_result (*tr_test_runner)(const void *args);
 
-typedef test_result (*test_tear_down)(const void *args);
+typedef tr_test_result (*tr_tear_down_callback)(const void *args);
 
-typedef struct test_case {
+typedef struct tr_test_case {
     const char *name;
-    test_tear_up tear_up;
-    test_callback callback;
-    test_tear_down tear_down;
-} test_case;
+    tr_tear_up_callback tear_up;
+    tr_test_runner runner;
+    tr_tear_down_callback tear_down;
+} tr_test_case;
 
-typedef struct test_suit {
+typedef struct tr_test_suit {
     int length;
     const char *name;
-    test_case *cases[MAX_CASE_IN_SUIT];
-} test_suit;
+    tr_test_case *cases[MAX_CASE_IN_SUIT];
+} tr_test_suit;
 
-test_result test_result_new(bool status, char *fmt, ...) SN_FORMAT_FN(2);
+tr_test_result tr_success(char *fmt, ...) TR_FORMAT(1);
 
-test_result test_result_with_arg(bool status, void *data, char *fmt, ...) SN_FORMAT_FN(3);
+tr_test_result tr_fail(char *fmt, ...) TR_FORMAT(1);
 
-test_case *test_case_new(const char *name, test_tear_up tear_up, test_callback callback, test_tear_down tear_down);
+tr_test_result tr_success_ext(void *data, char *fmt, ...) TR_FORMAT(2);
 
-test_suit *test_suit_new(const char *name);
+tr_test_result tr_fail_ext(void *data, char *fmt, ...) TR_FORMAT(2);
 
-void test_suit_add(test_suit *suit, test_case *new_case);
+tr_test_suit *tr_new_suit(const char *name);
 
-bool test_suit_run(test_suit *suit);
+tr_test_case *tr_new_case(const char *name, tr_tear_up_callback tear_up, tr_test_runner callback, tr_tear_down_callback tear_down);
+
+void tr_add_test_case(tr_test_suit *suit, tr_test_case *new_case);
+
+bool tr_run_suit(tr_test_suit *suit);
 
 #endif //SNAIL_TEST_RUNNER_H

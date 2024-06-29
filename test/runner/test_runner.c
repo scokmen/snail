@@ -1,23 +1,12 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include "test_runner.h"
 
-test_result test_result_new(bool status, char *fmt, ...) {
-    va_list args;
-    test_result result;
-    va_start(args, fmt);
-    result = test_result_with_arg(status, NULL, fmt, args);
-    va_end(args);
-    return result;
-}
-
-test_result test_result_with_arg(bool status, void *data, char *fmt, ...) {
-    va_list args;
-    char *message = malloc(sizeof(char) * TEST_OUT_MAX_LEN);
-    va_start(args, fmt);
-    sprintf(message, fmt, args);
-    va_end(args);
-    test_result result = {
+static tr_test_result create_test_result(bool status, char *fmt, void *data, va_list args) {
+    char *message;
+    vasprintf(&message, fmt, args);
+    tr_test_result result = {
             .status = status,
             .data = data,
             .output = message
@@ -25,22 +14,58 @@ test_result test_result_with_arg(bool status, void *data, char *fmt, ...) {
     return result;
 }
 
-test_case *test_case_new(const char *name, test_tear_up tear_up, test_callback callback, test_tear_down tear_down) {
-    test_case *test = malloc(sizeof(test_case));
-    test->name = name;
-    test->tear_up = tear_up;
-    test->callback = callback;
-    test->tear_down = tear_down;
-    return test;
+tr_test_result tr_success(char *fmt, ...) {
+    va_list args;
+    tr_test_result result;
+    va_start(args, fmt);
+    result = create_test_result(true, fmt, NULL, args);
+    va_end(args);
+    return result;
 }
 
-test_suit *test_suit_new(const char *name) {
-    test_suit *suit = malloc(sizeof(test_suit));
+tr_test_result tr_fail(char *fmt, ...) {
+    va_list args;
+    tr_test_result result;
+    va_start(args, fmt);
+    result = create_test_result(false, fmt, NULL, args);
+    va_end(args);
+    return result;
+}
+
+tr_test_result tr_success_ext(void *data, char *fmt, ...) {
+    va_list args;
+    tr_test_result result;
+    va_start(args, fmt);
+    result = create_test_result(true, fmt, data, args);
+    va_end(args);
+    return result;
+}
+
+tr_test_result tr_fail_ext(void *data, char *fmt, ...) {
+    va_list args;
+    tr_test_result result;
+    va_start(args, fmt);
+    result = create_test_result(false, fmt, data, args);
+    va_end(args);
+    return result;
+}
+
+tr_test_suit *tr_new_suit(const char *name) {
+    tr_test_suit *suit = malloc(sizeof(tr_test_suit));
     suit->name = name;
     return suit;
 }
 
-void test_suit_add(test_suit *suit, test_case *new_case) {
+tr_test_case *tr_new_case(const char *name, tr_tear_up_callback tear_up, tr_test_runner callback, tr_tear_down_callback tear_down) {
+    tr_test_case *test = malloc(sizeof(tr_test_case));
+    test->name = name;
+    test->tear_up = tear_up;
+    test->runner = callback;
+    test->tear_down = tear_down;
+    return test;
+}
+
+void tr_add_test_case(tr_test_suit *suit, tr_test_case *new_case) {
     if (suit->length < MAX_CASE_IN_SUIT) {
         suit->cases[suit->length] = new_case;
         suit->length++;
@@ -48,15 +73,15 @@ void test_suit_add(test_suit *suit, test_case *new_case) {
     // TODO: Handle else case
 }
 
-bool test_suit_run(test_suit *suit) {
+bool tr_run_suit(tr_test_suit *suit) {
     bool suit_result = true;
     fprintf(stdout, "RUNNING TEST SUIT: %s\n", suit->name);
     for (int i = 0; i < suit->length; i++) {
-        test_result result;
-        test_case *active_case = suit->cases[i];
+        tr_test_result result;
+        tr_test_case *active_case = suit->cases[i];
         void *arg = NULL;
         if (active_case->tear_up != NULL) {
-            test_result tear_up_result = active_case->tear_up();
+            tr_test_result tear_up_result = active_case->tear_up();
             if (tear_up_result.status == false) {
                 fprintf(stderr, " %d: CASE: %s\nSTATUS: TEAR-UP FAILED\nERROR:%s\n", i + 1, active_case->name, tear_up_result.output);
                 suit_result = false;
@@ -64,7 +89,7 @@ bool test_suit_run(test_suit *suit) {
             }
             arg = tear_up_result.data;
         }
-        result = active_case->callback(arg);
+        result = active_case->runner(arg);
         if (result.status == false) {
             fprintf(stderr, " %d: CASE: %s\nSTATUS: FAILED\nERROR:%s\n", i + 1, active_case->name, result.output);
             suit_result = false;
@@ -72,7 +97,7 @@ bool test_suit_run(test_suit *suit) {
             fprintf(stdout, " %d: CASE: %s\nSTATUS: PASSED\n", i + 1, active_case->name);
         }
         if (active_case->tear_down != NULL) {
-            test_result tear_down_result = active_case->tear_down(arg);
+            tr_test_result tear_down_result = active_case->tear_down(arg);
             if (tear_down_result.status == false) {
                 fprintf(stderr, " %d: CASE: %s\nSTATUS: TEAR-DOWN FAILED\nERROR:%s\n", i + 1, active_case->name, tear_down_result.output);
                 suit_result = false;

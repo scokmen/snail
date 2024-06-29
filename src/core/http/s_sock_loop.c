@@ -1,14 +1,19 @@
-#include <stdio.h>
 #include <uv.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
 #include <picohttpparser.h>
-#include "../snail.h"
-#include "s_sock_loop.h"
+#include "../s_logger.h"
 
-typedef struct s_sock_http_data {
+
+#define HTTP_MAX_HEADER_SIZE  (4096)                             // 4KB for request headers.
+#define HTTP_MAX_URI_SIZE     (1024)                             // 1KB for request URI.
+#define HTTP_MAX_BODY_SIZE    (1024 * 1024)                      // 1MB for request body.
+#define HTTP_MAX_HEADER_COUNT ((int)(HTTP_MAX_HEADER_SIZE / 8))  // Num of maximum headers.
+#define INC_SOCKET_BUF_SIZE   (65536)
+#define TCP_MAX_CON_BACKLOG   (128)
+
+typedef struct sock_http_data {
     const char *path;
     const char *method;
     char *request_buf SN_BUFFER;
@@ -18,74 +23,61 @@ typedef struct s_sock_http_data {
     size_t path_length;
     size_t method_length;
     size_t header_length;
-    struct phr_header headers[S_HTTP_MAX_HEADER_COUNT];
-} s_sock_http_data;
+    struct phr_header headers[HTTP_MAX_HEADER_COUNT];
+} sock_http_data;
 
-typedef struct s_sock_loop_data {
-    bool work_started;
-    s_sock_http_data *http_data;
+typedef struct sock_loop_data {
+    sock_http_data *http_data;
     uv_tcp_t *tcp_client;
     uv_work_t *work_req;
     uv_write_t *write_req;
-} s_sock_loop_data;
+} sock_loop_data;
 
 /*
  * UV: uv_close_cb
  * https://docs.libuv.org/en/v1.x/handle.html#c.uv_close_cb
  */
-static void close_tcp_client_callback(uv_handle_t *handle) {
+static void close_callback(uv_handle_t *handle) {
     if (handle != NULL) {
         free(handle);
     }
 }
 
-static void s_sock_http_data_free(s_sock_http_data *data) {
-    if (data == NULL) {
+static void sock_http_data_free(sock_http_data *loop_data) {
+    if (loop_data == NULL) {
         return;
     }
 
-    if (data->request_buf != NULL) {
-        free(data->request_buf);
+    if (loop_data->request_buf != NULL) {
+        free(loop_data->request_buf);
     }
 
-    if (data->response_buf != NULL) {
-        free(data->response_buf);
+    if (loop_data->response_buf != NULL) {
+        free(loop_data->response_buf);
     }
 }
 
-static void s_sock_loop_data_free(s_sock_loop_data *data) {
-    if (data == NULL) {
-        return;
+static void sock_loop_data_free(sock_loop_data *loop_data) {
+    if (loop_data->tcp_client != NULL && !uv_is_closing((uv_handle_t *) loop_data->tcp_client)) {
+        uv_read_stop((uv_stream_t *)loop_data->tcp_client);
+        uv_close((uv_handle_t *) loop_data->tcp_client, close_callback);
     }
 
-    if (data->tcp_client != NULL) {
-        uv_close((uv_handle_t *) data->tcp_client, close_tcp_client_callback);
+    if (loop_data->work_req != NULL) {
+        free(loop_data->work_req);
     }
 
-    s_sock_http_data_free(data->http_data);
-
-    if (data->work_req != NULL) {
-        free(data->work_req);
+    if (loop_data->write_req != NULL) {
+        free(loop_data->write_req);
     }
 
-    if (data->write_req != NULL) {
-        free(data->write_req);
-    }
-
-    free(data);
+    sock_http_data_free(loop_data->http_data);
+    free(loop_data);
 }
 
-static inline SN_INLINE void fail_fast(const char *message, s_sock_loop_data *data, const uv_buf_t *buffer, uv_stream_t *stream) {
-    fprintf(stderr, "%s %s:%d\n", message, __FILE__, __LINE__);
-    if (stream != NULL) {
-        uv_read_stop(stream);
-    }
-    if (data != NULL) {
-        s_sock_loop_data_free(data);
-    }
-    if (buffer != NULL) {
-        free(buffer->base);
-    }
+static inline SN_INLINE void clear_socket_objects(uv_stream_t *stream, const uv_buf_t *buf) {
+    sock_loop_data_free((sock_loop_data *) stream->data);
+    free(buf->base);
 }
 
 /*
@@ -93,7 +85,7 @@ static inline SN_INLINE void fail_fast(const char *message, s_sock_loop_data *da
  * https://docs.libuv.org/en/v1.x/stream.html#c.uv_write_cb
  */
 static void handle_response_sent(uv_write_t *req, SN_UNUSED int status) {
-    s_sock_loop_data_free((s_sock_loop_data *) req->data);
+    sock_loop_data_free((sock_loop_data *) req->data);
 }
 
 /*
@@ -101,7 +93,7 @@ static void handle_response_sent(uv_write_t *req, SN_UNUSED int status) {
  * https://docs.libuv.org/en/v1.x/threadpool.html#c.uv_work_cb
  */
 static void handle_request(uv_work_t *work_req) {
-    s_sock_loop_data *loop_data = work_req->data;
+    sock_loop_data *loop_data = work_req->data;
     loop_data->http_data->response_buf = strdup(
             "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Hello World</title></head><h1>Hello World</h1></html>");
 }
@@ -111,32 +103,35 @@ static void handle_request(uv_work_t *work_req) {
  * https://docs.libuv.org/en/v1.x/threadpool.html#c.uv_after_work_cb
  */
 static void handle_response(uv_work_t *req, int status) {
-    s_sock_loop_data *data = req->data;
+    sock_loop_data *loop_data = req->data;
     if (status == UV_ECANCELED) {
-        fail_fast("Request was cancelled!", data, NULL, NULL);
+        sn_log_info("Request was cancelled: %s\n", uv_strerror(status));
+        sock_loop_data_free(loop_data);
         return;
     }
-    uv_buf_t buf = uv_buf_init(data->http_data->response_buf, strlen(data->http_data->response_buf) + 1);
-    data->write_req = malloc(sizeof(uv_write_t));
-    if (data->write_req == NULL) {
-        fail_fast("Cannot allocate memory!", data, NULL, NULL);
+    uv_buf_t buf = uv_buf_init(loop_data->http_data->response_buf, strlen(loop_data->http_data->response_buf) + 1);
+    uv_write_t *write_req = malloc(sizeof(uv_write_t));
+    if (write_req == NULL) {
+        sn_log_err("Cannot create write_req object.\n");
+        sock_loop_data_free(loop_data);
         return;
     }
-    data->write_req->data = data;
-    uv_write(data->write_req, (uv_stream_t *) data->tcp_client, &buf, 1, handle_response_sent);
+    loop_data->write_req = write_req;
+    loop_data->write_req->data = loop_data;
+    uv_write(loop_data->write_req, (uv_stream_t *) loop_data->tcp_client, &buf, 1, handle_response_sent);
 }
 
 /*
  * UV: uv_alloc_cb
  * https://docs.libuv.org/en/v1.x/handle.html#c.uv_alloc_cb
  */
-static void allocate_buffer_callback(SN_UNUSED uv_handle_t *handle, SN_UNUSED size_t size, uv_buf_t *buf) {
-    char *base = (char *) calloc(1, S_INC_SOCKET_BUF_SIZE);
+static void on_buffer_alloc_callback(SN_UNUSED uv_handle_t *handle, SN_UNUSED size_t size, uv_buf_t *buf) {
+    char *base = (char *) calloc(1, INC_SOCKET_BUF_SIZE);
 
     if (base == NULL)
         *buf = uv_buf_init(NULL, 0);
     else {
-        *buf = uv_buf_init(base, S_INC_SOCKET_BUF_SIZE);
+        *buf = uv_buf_init(base, INC_SOCKET_BUF_SIZE);
     }
 }
 
@@ -144,24 +139,26 @@ static void allocate_buffer_callback(SN_UNUSED uv_handle_t *handle, SN_UNUSED si
  * UV: uv_read_cb
  * https://docs.libuv.org/en/v1.x/stream.html#c.uv_read_cb
  */
-static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv_buf_t *buf) {
-    s_sock_loop_data *data = stream->data;
+static void on_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv_buf_t *buf) {
+    sock_loop_data *loop_data = stream->data;
 
     if (buf_size == -1 || buf_size == UV_EOF) {
-        fail_fast("Cannot read socket!", data, buf, stream);
+        sn_log_err("Cannot read socket: %zd\n", buf_size);
+        clear_socket_objects(stream, buf);
         return;
     }
 
-    if (data->http_data == NULL) {
-        data->http_data = malloc(sizeof(s_sock_http_data));
-        if (data->http_data == NULL) {
-            fail_fast("Cannot allocate memory!", data, buf, stream);
+    if (loop_data->http_data == NULL) {
+        loop_data->http_data = malloc(sizeof(sock_http_data));
+        if (loop_data->http_data == NULL) {
+            sn_log_err("Cannot create http_data object.\n");
+            clear_socket_objects(stream, buf);
             return;
         }
-        data->http_data->header_length = S_HTTP_MAX_HEADER_COUNT;
+        loop_data->http_data->header_length = HTTP_MAX_HEADER_COUNT;
     }
 
-    s_sock_http_data *http_data = data->http_data;
+    sock_http_data *http_data = loop_data->http_data;
     http_data->buf_cursor = http_data->buf_length;
     http_data->buf_length = http_data->buf_length + buf_size;
     if (http_data->request_buf == NULL) {
@@ -169,7 +166,8 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
     } else {
         void *allocated_memory = realloc(http_data->request_buf, http_data->buf_length);
         if (allocated_memory == NULL) {
-            fail_fast("Cannot allocate memory!", data, buf, stream);
+            sn_log_err("Cannot allocate memory for incoming stream.\n");
+            clear_socket_objects(stream, buf);
             return;
         }
         http_data->request_buf = allocated_memory;
@@ -183,7 +181,8 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
                                      http_data->buf_cursor);
 
     if (req_size == -1) {
-        fail_fast("Cannot parse the HTTP request!", data, buf, stream);
+        sn_log_err("Cannot parse the HTTP request.\n");
+        clear_socket_objects(stream, buf);
         return;
     }
 
@@ -191,61 +190,71 @@ static void socket_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv
         return;
     }
 
-    data->work_req = malloc(sizeof(uv_work_t));
-    if (data->work_req == NULL) {
-        fail_fast("Cannot create request!", data, buf, stream);
+    loop_data->work_req = malloc(sizeof(uv_work_t));
+    if (loop_data->work_req == NULL) {
+        sn_log_err("Cannot create work_req object.\n");
+        clear_socket_objects(stream, buf);
         return;
     }
-    data->work_req->data = data;
-    data->work_started = true;
+    loop_data->work_req->data = loop_data;
     uv_read_stop(stream);
-    uv_queue_work(uv_default_loop(), data->work_req, handle_request, handle_response);
+    uv_queue_work(uv_default_loop(), loop_data->work_req, handle_request, handle_response);
 }
 
 /*
  * UV: uv_connection_cb
  * https://docs.libuv.org/en/v1.x/stream.html#c.uv_connection_cb
  */
-static void connection_callback(uv_stream_t *server, int status) {
+static void on_connection_callback(uv_stream_t *server, int status) {
+    int accept_response;
+
     if (status == -1) {
-        fail_fast("Cannot accept connection!", NULL, NULL, NULL);
+        sn_log_err("Cannot accept connection: %d\n", status);
         return;
     }
 
-    s_sock_loop_data *event_data = malloc(sizeof(s_sock_loop_data));
-    if (event_data == NULL) {
-        fail_fast("Cannot allocate memory!", NULL, NULL, NULL);
+    sock_loop_data *loop_data = malloc(sizeof(sock_loop_data));
+    if (loop_data == NULL) {
+        sn_log_err("Cannot create s_sock_loop_data object.\n");
         return;
     }
 
     uv_tcp_t *tcp_client = malloc(sizeof(uv_tcp_t));
     if (tcp_client == NULL) {
-        fail_fast("Cannot allocate memory!", NULL, NULL, NULL);
+        sock_loop_data_free(loop_data);
+        sn_log_err("Cannot create tcp_client object.\n");
         return;
     }
 
-    tcp_client->data = event_data;
-    event_data->tcp_client = tcp_client;
+    tcp_client->data = loop_data;
+    loop_data->tcp_client = tcp_client;
     uv_tcp_init(uv_default_loop(), tcp_client);
 
-    if (uv_accept(server, (uv_stream_t *) tcp_client) == 0) {
-        uv_read_start((uv_stream_t *) tcp_client, allocate_buffer_callback, socket_read_callback);
+    accept_response = uv_accept(server, (uv_stream_t *) tcp_client);
+
+    if (accept_response == 0) {
+        uv_read_start((uv_stream_t *) tcp_client, on_buffer_alloc_callback, on_read_callback);
     } else {
-        fail_fast("Cannot accept connection!", event_data, NULL, NULL);
+        sn_log_err("Cannot accept connection: %d\n", accept_response);
+        sock_loop_data_free(loop_data);
     }
 }
 
-int s_listen(int port) {
+int sn_listen(int port) {
     uv_tcp_t server;
     struct sockaddr_in addr;
+
+    server.write_queue_size
 
     uv_ip4_addr("0.0.0.0", port, &addr);
     uv_tcp_init(uv_default_loop(), &server);
     uv_tcp_bind(&server, (struct sockaddr *) &addr, 0);
 
-    int r = uv_listen((uv_stream_t *) &server, S_TCP_MAX_CON_BACKLOG, connection_callback);
+    int r = uv_listen((uv_stream_t *) &server, TCP_MAX_CON_BACKLOG, on_connection_callback);
     if (r) {
-        return fprintf(stderr, "Cannot listen: %s.\n", uv_strerror(r));
+        sn_log_fatal("Cannot listen port. %s\n", uv_strerror(r));
+        exit(EXIT_FAILURE);
     }
+    sn_log_debug("Server is ready and accepts connection on %d\n", port);
     return uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }

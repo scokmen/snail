@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include "test_helpers.h"
 
+
 static socket_handler_t open_socket(int attempt, const char *host, const char *port) {
     int connect_err;
     struct addrinfo hints, *res;
@@ -45,7 +46,7 @@ static http_code_t parse_status_code(const char *http_response) {
     return status;
 }
 
-http_code_t read_socket(socket_handler_t sock_fd) {
+http_code_t th_read_http_code(socket_handler_t sock_fd) {
     int http_code;
     char buffer[1024];
     char *response = NULL;
@@ -90,7 +91,7 @@ http_code_t read_socket(socket_handler_t sock_fd) {
     return http_code;
 }
 
-socket_handler_t try_connect_server(const char *host, const char *port, int max_attempt, unsigned int backoff) {
+socket_handler_t th_connect_server(const char *host, const char *port, int max_attempt, unsigned int backoff) {
     socket_handler_t sock_fd;
     int attempt = 1;
 

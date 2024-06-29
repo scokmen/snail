@@ -9,34 +9,34 @@
 #include "runner/test_runner.h"
 #include "helpers/test_helpers.h"
 
-test_result create_socket() {
-    socket_handler_t sock_fd = try_connect_server("0.0.0.0", "3000", 5, 1);
+tr_test_result create_socket() {
+    socket_handler_t sock_fd = th_connect_server("0.0.0.0", "3000", 5, 1);
 
     if (sock_fd < 0) {
-        return test_result_new(false, "Cannot create socket!");
+        return tr_fail("Cannot create socket.\n");
     }
 
     socket_handler_t *args = malloc(sizeof (socket_handler_t));
     if (args == NULL) {
-        return test_result_new(false, "Cannot allocate memory!");
+        return tr_fail("Cannot allocate memory.\n");
     }
     *args = sock_fd;
 
-    return test_result_with_arg(true, args, "Socket created!");
+    return tr_success_ext(args, "Socket created.\n");
 }
 
-test_result close_socket(const void *args) {
+tr_test_result close_socket(const void *args) {
     if (args == NULL) {
-        return test_result_new(true, "Socket is empty!");
+        return tr_success("Socket is empty.\n");
     }
 
     socket_handler_t sock_fd = *((socket_handler_t*)args);
     close(sock_fd);
 
-    return test_result_new(true, "Socket was closed!");
+    return tr_success("Socket was closed.\n");
 }
 
-test_result minimal_http_request_case(const void *args) {
+tr_test_result minimal_http_request_case(const void *args) {
     int http_code;
     ssize_t byte_sent = 0, total_byte_sent = 0;
     size_t request_size = 0;
@@ -52,27 +52,27 @@ test_result minimal_http_request_case(const void *args) {
         int buf_size = (5 < (request_size - total_byte_sent)) ? 5 : (request_size - total_byte_sent);
         byte_sent = send(sock_fd, http_request + total_byte_sent, buf_size, 0);
         if (byte_sent < 0) {
-            return test_result_new(false, "Cannot send data!");
+            return tr_fail("Cannot send data.\n");
         }
         total_byte_sent += byte_sent;
     }
 
-    http_code = read_socket(sock_fd);
+    http_code = th_read_http_code(sock_fd);
 
     if (http_code == 200) {
-        return test_result_new(true, "SUCCESS");
+        return tr_success("Http:200");
     }
 
-    return test_result_new(false, "Expected: 200, Found: %d", http_code);
+    return tr_fail("Expected: 200, Found: %d", http_code);
 }
 
 int run_tests() {
-    test_suit *suit = test_suit_new("HTTP PARSE SUIT");
+    tr_test_suit *suit = tr_new_suit("HTTP PARSE SUIT");
 
-    test_suit_add(suit,
-                  test_case_new("Minimal HTTP Request", create_socket, minimal_http_request_case, close_socket));
+    tr_add_test_case(suit,
+                     tr_new_case("Minimal HTTP Request", create_socket, minimal_http_request_case, close_socket));
 
-    return test_suit_run(suit);
+    return tr_run_suit(suit);
 }
 
 int main() {
@@ -84,7 +84,7 @@ int main() {
     }
 
     if (pid == 0) {
-        s_listen(3000);
+        sn_listen(3000);
         return EXIT_SUCCESS;
     }
 

@@ -1,6 +1,5 @@
 #include <snail.h>
 
-int main(int argc, char **argv)
-{
-    return s_listen(3000);
+int main(int argc, char **argv) {
+    return sn_listen(3000);
 }
