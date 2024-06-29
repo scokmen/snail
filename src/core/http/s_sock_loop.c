@@ -244,8 +244,6 @@ int sn_listen(int port) {
     uv_tcp_t server;
     struct sockaddr_in addr;
 
-    server.write_queue_size
-
     uv_ip4_addr("0.0.0.0", port, &addr);
     uv_tcp_init(uv_default_loop(), &server);
     uv_tcp_bind(&server, (struct sockaddr *) &addr, 0);
