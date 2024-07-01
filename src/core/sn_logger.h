@@ -1,5 +1,5 @@
-#ifndef SNAIL_S_LOGGER_H
-#define SNAIL_S_LOGGER_H
+#ifndef SNAIL_SN_LOGGER_H
+#define SNAIL_SN_LOGGER_H
 
 
 #include "../snail.h"

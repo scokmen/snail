@@ -45,9 +45,11 @@ target_include_directories(pico
 # Include snail project
 add_library(snail STATIC
         src/snail.h
-        src/core/http/s_sock_loop.c
-        src/core/s_logger.h
-        src/core/s_logger.c
+        src/core/http/sn_sock_loop.c
+        src/core/sn_logger.h
+        src/core/sn_logger.c
+        src/core/http/sn_http_code.h
+        src/core/http/sn_http_code.c
 )
 
 target_include_directories(snail
@@ -74,7 +76,7 @@ endif ()
 # SNAIL_TEST                                                           #
 ########################################################################
 # Include snail test project
-add_executable(snail_test test/s_sock_loop_test.c
+add_executable(snail_test test/sn_sock_loop_test.c
         test/runner/test_runner.h
         test/runner/test_runner.c
         test/helpers/test_helpers.h

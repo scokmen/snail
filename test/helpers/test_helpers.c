@@ -38,9 +38,9 @@ static socket_handler_t open_socket(int attempt, const char *host, const char *p
 }
 
 static http_code_t parse_status_code(const char *http_response) {
-    int handled, status = -1;
-    handled = sscanf(http_response, "HTTP/1.1 %d", &status);
-    if (handled < 1) {
+    int handled, status = -1, minor = 1;
+    handled = sscanf(http_response, "HTTP/1.%d %d", &minor, &status);
+    if (handled < 2) {
         return -1;
     }
     return status;
@@ -60,7 +60,10 @@ http_code_t th_read_http_code(socket_handler_t sock_fd) {
             break;
         }
         if (byte_received == 0) {
-            http_code = parse_status_code(response);
+            http_code = -1;
+            if (response != NULL) {
+                http_code = parse_status_code(response);
+            }
             break;
         }
         if (response == NULL) {

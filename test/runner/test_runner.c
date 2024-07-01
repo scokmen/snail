@@ -85,6 +85,9 @@ bool tr_run_suit(tr_test_suit *suit) {
             if (tear_up_result.status == false) {
                 fprintf(stderr, " %d: CASE: %s\nSTATUS: TEAR-UP FAILED\nERROR:%s\n", i + 1, active_case->name, tear_up_result.output);
                 suit_result = false;
+                if (active_case->tear_down != NULL) {
+                    active_case->tear_down(arg);
+                }
                 continue;
             }
             arg = tear_up_result.data;
