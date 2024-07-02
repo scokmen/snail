@@ -50,12 +50,14 @@ add_library(snail STATIC
         src/core/sn_logger.c
         src/core/http/sn_http_code.h
         src/core/http/sn_http_code.c
+        src/internal/unix/sn_attr.h
+        src/internal/win/sn_attr.h
 )
 
 target_include_directories(snail
         INTERFACE "${LIBRARY_PATH}"
         PRIVATE "${LIBRARY_PATH}/core"
-        PRIVATE "${LIBRARY_PATH}/core/http")
+        PRIVATE "${LIBRARY_PATH}/internal")
 
 target_link_libraries(snail pico uv)
 ########################################################################

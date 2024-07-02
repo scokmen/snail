@@ -4,10 +4,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#if defined __has_attribute
+#if (defined(__GCC__) || defined(__clang__)) && defined(__has_attribute)
 #  if __has_attribute (format)
 #    define TR_FORMAT(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
+#  else
+#    define TR_FORMAT
 #  endif
+#else
+#  define TR_FORMAT
 #endif
 
 #define MAX_CASE_IN_SUIT (32)

@@ -128,6 +128,7 @@ static void on_after_work_callback(uv_work_t *req, int status) {
     write_response(loop_data);
 }
 
+// TODO: Implement a optimized header-length checker.
 static sn_http_code_t check_fail_fast_err(sock_http_data *http_data, int minor_version) {
     size_t total_header_size = 0;
     if (minor_version != 0 && minor_version != 1) {
@@ -146,7 +147,6 @@ static sn_http_code_t check_fail_fast_err(sock_http_data *http_data, int minor_v
             return HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE;
         }
     }
-    sn_log_err("HED: %zu\n", total_header_size);
     return -1;
 }
 
@@ -237,12 +237,12 @@ static void on_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv_buf
         return;
     }
 
+    free(buf->base);
+
     if (req_size == -2) {
-        free(buf->base);
         return;
     }
 
-    free(buf->base);
     uv_read_stop(stream);
     fail_fast_code = check_fail_fast_err(http_data, minor_version);
 
