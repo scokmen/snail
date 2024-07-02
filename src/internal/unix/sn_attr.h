@@ -19,12 +19,14 @@
 #  endif
 #  if __has_attribute (format)
 #    define SN_FORMAT(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
+#  else
+#    define SN_FORMAT(FROM)
 #  endif
 #else
 #  define SN_BUFFER
 #  define SN_UNUSED
 #  define SN_INLINE
-#  define SN_FORMAT
+#  define SN_FORMAT(FROM)
 #endif
 
 #endif //SNAIL_SN_ATTR_H
