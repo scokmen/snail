@@ -22,11 +22,17 @@
 #  else
 #    define SN_FORMAT(FROM)
 #  endif
+#  if __has_attribute (const)
+#    define SN_CONST_FN __attribute__ ((const))
+#  else
+#    define SN_CONST_FN
+#  endif
 #else
 #  define SN_BUFFER
 #  define SN_UNUSED
 #  define SN_INLINE
 #  define SN_FORMAT(FROM)
+#  SN_CONST_FN
 #endif
 
 #endif //SNAIL_SN_ATTR_H

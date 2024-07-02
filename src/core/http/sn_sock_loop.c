@@ -14,7 +14,7 @@
 #define INC_SOCKET_BUF_SIZE         (65536)
 #define TCP_MAX_CON_BACKLOG         (128)
 
-typedef struct sock_http_data {
+typedef struct {
     const char *path;
     const char *method;
     char *request_buf SN_BUFFER;
@@ -27,7 +27,7 @@ typedef struct sock_http_data {
     struct phr_header headers[HTTP_MAX_HEADER_COUNT];
 } sock_http_data;
 
-typedef struct sock_loop_data {
+typedef struct {
     sock_http_data *http_data;
     uv_tcp_t *tcp_client;
     uv_work_t *work_req;
@@ -76,7 +76,8 @@ static void sock_loop_data_free(sock_loop_data *loop_data) {
     free(loop_data);
 }
 
-static inline SN_INLINE void clear_loop_request(uv_stream_t *stream, const uv_buf_t *buf) {
+SN_INLINE
+static inline void clear_loop_request(uv_stream_t *stream, const uv_buf_t *buf) {
     sock_loop_data_free((sock_loop_data *) stream->data);
     if (buf != NULL) {
         free(buf->base);

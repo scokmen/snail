@@ -128,9 +128,9 @@
   XX(NETWORK_AUTHENTICATION_REQUIRED , "Network Authentication Required") \
 
 typedef enum {
-#define DEF_HTTP_ENUM(code, _) HTTP_ ## code = code,
+  #define DEF_HTTP_ENUM(code, _) HTTP_ ## code = code,
     SN_HTTP_CODE_MAP(DEF_HTTP_ENUM)
-#undef DEF_HTTP_ENUM
+  #undef DEF_HTTP_ENUM
 } sn_http_code_t;
 
 const char *sn_http_get_description(sn_http_code_t code);
