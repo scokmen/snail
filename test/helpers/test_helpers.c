@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <time.h>
 #include "test_helpers.h"
 
 static socket_handler_t open_socket(int attempt, const char *host, const char *port) {
@@ -47,9 +46,8 @@ static http_code_t parse_status_code(const char *http_response) {
 }
 
 const char *generate_rand_str(int length) {
-    srand(time(NULL));
     char *str = malloc((sizeof(char) * length) + 1);
-    for (int i = 0; i < length - 1; i++){
+    for (int i = 0; i < length; i++){
         str[i] = (char) (rand() % 26 + 65);
     }
     str[length] = 0;

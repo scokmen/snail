@@ -41,6 +41,7 @@ static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target
     node = linked_list.head;
     while (node != NULL) {
         if (!scan_inactive_nodes && !node->active) {
+            node = node->next;
             continue;
         }
         if (strcmp(node->label, key) == 0) {
@@ -110,7 +111,10 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
         return true;
     }
 
-    while (node->next != NULL && !node->active) {
+    while (node->next != NULL) {
+        if (!node->active) {
+            break;
+        }
         node = node->next;
     }
 

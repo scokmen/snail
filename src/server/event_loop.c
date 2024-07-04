@@ -43,17 +43,17 @@ static void on_close_callback(uv_handle_t *handle) {
     }
 }
 
-static void sock_http_data_free(sock_http_data *loop_data) {
-    if (loop_data == NULL) {
+static void sock_http_data_free(sock_http_data *http_data) {
+    if (http_data == NULL) {
         return;
     }
 
-    if (loop_data->request_buf != NULL) {
-        free(loop_data->request_buf);
+    if (http_data->request_buf != NULL) {
+        free(http_data->request_buf);
     }
 
-    if (loop_data->response_buf != NULL) {
-        free(loop_data->response_buf);
+    if (http_data->response_buf != NULL) {
+        free(http_data->response_buf);
     }
 }
 
@@ -200,7 +200,7 @@ static void on_read_callback(uv_stream_t *stream, ssize_t buf_size, const uv_buf
     }
 
     if (loop_data->http_data == NULL) {
-        loop_data->http_data = malloc(sizeof(sock_http_data));
+        loop_data->http_data = calloc(1, sizeof(sock_http_data));
         if (loop_data->http_data == NULL) {
             sn_log_err("Cannot create http_data object.\n");
             clear_loop_request(stream, buf);
@@ -266,7 +266,7 @@ static void on_connection_callback(uv_stream_t *server, int status) {
         return;
     }
 
-    sock_loop_data *loop_data = malloc(sizeof(sock_loop_data));
+    sock_loop_data *loop_data = calloc(1, sizeof(sock_loop_data));
     if (loop_data == NULL) {
         sn_log_err("Cannot create s_sock_loop_data object.\n");
         return;

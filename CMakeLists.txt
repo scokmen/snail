@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.16.3)
 project(snail LANGUAGES C)
 
 include(CMakeDependentOption)
@@ -6,12 +6,11 @@ include(CMakeDependentOption)
 set(CMAKE_C_STANDARD 11)
 set(LIBRARY_PATH "src")
 set(VENDORS_PATH "vendors")
+set(TEST_PATH "test")
+set(SAMPLES_PATH "samples")
+set(BENCHMARKS_PATH "benchmark")
 
 enable_testing()
-
-# -BUILD_SAMPLES=ON|OFF
-cmake_dependent_option(SN_BUILD_SAMPLES "Build sample projects" ON "BUILD_SAMPLES" OFF)
-
 
 ########################################################################
 # LIBUV                                                                #
@@ -65,12 +64,13 @@ target_link_libraries(snail pico uv)
 # SAMPLES                                                              #
 # /samples/*                                                           #
 ########################################################################
-if(SN_BUILD_SAMPLES)
-    add_executable(snail_sample_1
-            samples/simple/main.c)
+set(sn_sample_apps
+        "simple_server")
 
-    target_link_libraries(snail_sample_1 uv pico snail)
-endif ()
+foreach (sample_app IN LISTS sn_sample_apps)
+    add_executable("${sample_app}_sample" "${SAMPLES_PATH}/${sample_app}.c")
+    target_link_libraries("${sample_app}_sample" snail)
+endforeach()
 ########################################################################
 
 
@@ -79,18 +79,32 @@ endif ()
 # /test/*                                                              #
 ########################################################################
 set(sn_test_resources
-        test/runner/test_runner.h
-        test/runner/test_runner.c
-        test/helpers/test_helpers.h
-        test/helpers/test_helpers.c)
+        ${TEST_PATH}/runner/test_runner.h
+        ${TEST_PATH}/runner/test_runner.c
+        ${TEST_PATH}/helpers/test_helpers.h
+        ${TEST_PATH}/helpers/test_helpers.c)
 
 set(sn_test_suits
         "map"
         "event_loop")
 
 foreach (test_suit IN LISTS sn_test_suits)
-    add_executable("${test_suit}_test" ${sn_test_resources} "test/${test_suit}_test.c")
+    add_executable("${test_suit}_test" ${sn_test_resources} "${TEST_PATH}/${test_suit}_test.c")
     target_link_libraries("${test_suit}_test" snail)
     add_test(NAME "${test_suit}_test" COMMAND "$<TARGET_FILE:${test_suit}_test>")
+endforeach()
+########################################################################
+
+
+########################################################################
+# BENCHMARKS                                                           #
+# /memcheck/*                                                          #
+########################################################################
+set(sn_benchmarks
+        "map")
+
+foreach (benchmark IN LISTS sn_benchmarks)
+    add_executable("${benchmark}_benchmark" "${BENCHMARKS_PATH}/${benchmark}_benchmark.c")
+    target_link_libraries("${benchmark}_benchmark" snail)
 endforeach()
 ########################################################################

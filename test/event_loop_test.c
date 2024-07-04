@@ -5,7 +5,8 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <signal.h>
-#include "snail.h"
+#include <snail.h>
+#include <time.h>
 #include "helpers/test_helpers.h"
 #include "runner/test_runner.h"
 
@@ -56,10 +57,10 @@ tr_test_result send_request_assert_response(socket_handler_t sock_fd, const char
     actual_http_code = th_read_http_code(sock_fd);
 
     if (actual_http_code == expected_http_code) {
-        return tr_success("Expected %d, Found: %d", expected_http_code, actual_http_code);
+        return tr_success("Expected %d, Found: %d\n", expected_http_code, actual_http_code);
     }
 
-    return tr_fail("Expected %d, Found: %d", expected_http_code, actual_http_code);
+    return tr_fail("Expected %d, Found: %d\n", expected_http_code, actual_http_code);
 }
 
 tr_test_result valid_http_request(const void *args) {
@@ -111,10 +112,12 @@ int run_tests() {
                      tr_new_case("Too Large Header (Single)", create_socket, too_large_header_single, close_socket));
     tr_add_test_case(suit,
                      tr_new_case("Too Large Header (Total)", create_socket, too_large_header_total, close_socket));
+
     return tr_run_suit(suit);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    srand(time(NULL));
     pid_t pid = fork();
 
     if (pid < 0) {

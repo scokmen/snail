@@ -10,8 +10,8 @@ typedef struct sn_map_lln_t {
     bool active;
     void *data;
     const char *label;
-    sn_map_unregister_cb unregister_cb;
     struct sn_map_lln_t *next;
+    sn_map_unregister_cb unregister_cb;
 } sn_map_lln_t;
 
 typedef struct {

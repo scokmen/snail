@@ -1,0 +1,10 @@
+valgrind  --track-origins=yes --leak-check=yes ./map_benchmark
+
+==4569== HEAP SUMMARY:
+==4569==     in use at exit: 0 bytes in 0 blocks
+==4569==   total heap usage: 513,529 allocs, 513,529 frees, 3,227,208 bytes allocated
+==4569==
+==4569== All heap blocks were freed -- no leaks are possible
+==4569==
+==4569== For lists of detected and suppressed errors, rerun with: -s
+==4569== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
