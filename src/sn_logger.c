@@ -2,10 +2,9 @@
 #include <stdarg.h>
 #include "sn_logger.h"
 
+static int min_log_level = LOG_LEVEL_DEBUG;
 
-static int min_log_level = SN_LOG_LEVEL_DEBUG;
-
-#define GET_OUTPUT_DEV(LEVEL) ((LEVEL < SN_LOG_LEVEL_ERROR) ? stdout : stderr)
+#define GET_OUTPUT_DEV(LEVEL) ((LEVEL < LOG_LEVEL_ERROR) ? stdout : stderr)
 
 #define WRITE_LOG(LEVEL, FMT) if (min_log_level <= LEVEL) {                      \
                                     va_list args;                                \
@@ -15,33 +14,33 @@ static int min_log_level = SN_LOG_LEVEL_DEBUG;
                               }
 
 void sn_log_set_level(int level) {
-    if (level <= SN_LOG_LEVEL_DEBUG) {
-        min_log_level = SN_LOG_LEVEL_DEBUG;
+    if (level <= LOG_LEVEL_DEBUG) {
+        min_log_level = LOG_LEVEL_DEBUG;
         return;
     }
-    if (level >= SN_LOG_LEVEL_FATAL) {
-        min_log_level = SN_LOG_LEVEL_FATAL;
+    if (level >= LOG_LEVEL_FATAL) {
+        min_log_level = LOG_LEVEL_FATAL;
         return;
     }
     min_log_level = level;
 }
 
 void sn_log_debug(char *fmt, ...) {
-    WRITE_LOG(SN_LOG_LEVEL_DEBUG, fmt)
+    WRITE_LOG(LOG_LEVEL_DEBUG, fmt)
 }
 
 void sn_log_info(char *fmt, ...) {
-    WRITE_LOG(SN_LOG_LEVEL_INFO, fmt)
+    WRITE_LOG(LOG_LEVEL_INFO, fmt)
 }
 
 void sn_log_warn(char *fmt, ...) {
-    WRITE_LOG(SN_LOG_LEVEL_WARN, fmt)
+    WRITE_LOG(LOG_LEVEL_WARN, fmt)
 }
 
 void sn_log_err(char *fmt, ...) {
-    WRITE_LOG(SN_LOG_LEVEL_ERROR, fmt)
+    WRITE_LOG(LOG_LEVEL_ERROR, fmt)
 }
 
 void sn_log_fatal(char *fmt, ...) {
-    WRITE_LOG(SN_LOG_LEVEL_FATAL, fmt)
+    WRITE_LOG(LOG_LEVEL_FATAL, fmt)
 }

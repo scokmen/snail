@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <time.h>
 #include "test_helpers.h"
-
 
 static socket_handler_t open_socket(int attempt, const char *host, const char *port) {
     int connect_err;
@@ -44,6 +44,16 @@ static http_code_t parse_status_code(const char *http_response) {
         return -1;
     }
     return status;
+}
+
+const char *generate_rand_str(int length) {
+    srand(time(NULL));
+    char *str = malloc((sizeof(char) * length) + 1);
+    for (int i = 0; i < length - 1; i++){
+        str[i] = (char) (rand() % 26 + 65);
+    }
+    str[length] = 0;
+    return str;
 }
 
 http_code_t th_read_http_code(socket_handler_t sock_fd) {

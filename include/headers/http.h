@@ -1,6 +1,5 @@
-#ifndef SNAIL_SN_HTTP_CODE_H
-#define SNAIL_SN_HTTP_CODE_H
-
+#ifndef SNAIL_HTTP_H
+#define SNAIL_HTTP_H
 
 #define CONTINUE                        100
 #define SWITCHING_PROTOCOLS             101
@@ -64,7 +63,7 @@
 #define NOT_EXTENDED                    510
 #define NETWORK_AUTHENTICATION_REQUIRED 511
 
-#define SN_HTTP_CODE_MAP(XX)                                              \
+#define HTTP_CODE_MAP(XX)                                                 \
   XX(CONTINUE                        , "Continue")                        \
   XX(SWITCHING_PROTOCOLS             , "Switching Protocols")             \
   XX(PROCESSING                      , "Processing")                      \
@@ -129,10 +128,10 @@
 
 typedef enum {
   #define DEF_HTTP_ENUM(code, _) HTTP_ ## code = code,
-    SN_HTTP_CODE_MAP(DEF_HTTP_ENUM)
+    HTTP_CODE_MAP(DEF_HTTP_ENUM)
   #undef DEF_HTTP_ENUM
 } sn_http_code_t;
 
-const char *sn_http_get_description(sn_http_code_t code);
+extern const char *sn_http_get_description(sn_http_code_t code);
 
-#endif //SNAIL_SN_HTTP_CODE_H
+#endif //SNAIL_HTTP_H

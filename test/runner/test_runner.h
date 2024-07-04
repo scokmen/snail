@@ -45,13 +45,17 @@ typedef struct tr_test_suit {
     tr_test_case *cases[MAX_CASE_IN_SUIT];
 } tr_test_suit;
 
-tr_test_result tr_success(char *fmt, ...) TR_FORMAT(1);
+TR_FORMAT(1)
+tr_test_result tr_success(char *fmt, ...);
 
-tr_test_result tr_fail(char *fmt, ...) TR_FORMAT(1);
+TR_FORMAT(1)
+tr_test_result tr_fail(char *fmt, ...);
 
-tr_test_result tr_success_ext(void *data, char *fmt, ...) TR_FORMAT(2);
+TR_FORMAT(2)
+tr_test_result tr_success_ext(void *data, char *fmt, ...);
 
-tr_test_result tr_fail_ext(void *data, char *fmt, ...) TR_FORMAT(2);
+TR_FORMAT(2)
+tr_test_result tr_fail_ext(void *data, char *fmt, ...);
 
 tr_test_suit *tr_new_suit(const char *name);
 

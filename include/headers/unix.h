@@ -1,5 +1,5 @@
-#ifndef SNAIL_SN_ATTR_H
-#define SNAIL_SN_ATTR_H
+#ifndef SNAIL_UNIX_H
+#define SNAIL_UNIX_H
 
 #ifdef __has_attribute
 #  if __has_attribute (nonstring)
@@ -27,12 +27,18 @@
 #  else
 #    define SN_CONST_FN
 #  endif
+#  if __has_attribute (nonnull)
+#    define SN_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
+#  else
+#    define SN_NONNULL(...)
+#  endif
 #else
 #  define SN_BUFFER
 #  define SN_UNUSED
 #  define SN_INLINE
 #  define SN_FORMAT(FROM)
-#  SN_CONST_FN
+#  define SN_CONST_FN
+#  define SN_NONNULL(...)
 #endif
 
-#endif //SNAIL_SN_ATTR_H
+#endif //SNAIL_UNIX_H

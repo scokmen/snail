@@ -10,23 +10,21 @@ set(VENDORS_PATH "vendors")
 enable_testing()
 
 # -BUILD_SAMPLES=ON|OFF
-cmake_dependent_option(S_BUILD_SAMPLES "Build sample projects" ON "BUILD_SAMPLES" OFF)
+cmake_dependent_option(SN_BUILD_SAMPLES "Build sample projects" ON "BUILD_SAMPLES" OFF)
 
 
 ########################################################################
 # LIBUV                                                                #
+# https://github.com/libuv/libuv                                       #
 ########################################################################
-# https://github.com/libuv/libuv
-# Include libuv project
 add_subdirectory("${VENDORS_PATH}/libuv" "${VENDORS_PATH}/libuv")
 ########################################################################
 
 
 ########################################################################
 # PICO_HTTP_PARSER                                                     #
+# https://github.com/h2o/picohttpparser                                #
 ########################################################################
-# https://github.com/h2o/picohttpparser
-# Include picohttpparser project
 add_library(pico STATIC
         "${VENDORS_PATH}/picohttpparser/picohttpparser.c"
         "${VENDORS_PATH}/picohttpparser/picohttpparser.h")
@@ -41,23 +39,23 @@ target_include_directories(pico
 
 ########################################################################
 # SNAIL                                                                #
+# https://github.com/scokmen/snail                                     #
 ########################################################################
-# Include snail project
-add_library(snail STATIC
-        src/snail.h
-        src/core/http/sn_sock_loop.c
-        src/core/sn_logger.h
-        src/core/sn_logger.c
-        src/core/http/sn_http_code.h
-        src/core/http/sn_http_code.c
-        src/internal/unix/sn_attr.h
-        src/internal/win/sn_attr.h
-)
+set(sn_sources
+        src/types/map.c
+        src/server/http.c
+        src/server/event_loop.c
+        src/sn_logger.h
+        src/sn_logger.c)
+
+add_library(snail STATIC ${sn_sources})
 
 target_include_directories(snail
-        INTERFACE "${LIBRARY_PATH}"
-        PRIVATE "${LIBRARY_PATH}/core"
-        PRIVATE "${LIBRARY_PATH}/internal")
+        PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        PRIVATE
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
 
 target_link_libraries(snail pico uv)
 ########################################################################
@@ -65,28 +63,34 @@ target_link_libraries(snail pico uv)
 
 ########################################################################
 # SAMPLES                                                              #
+# /samples/*                                                           #
 ########################################################################
-# Build sample projecgts
-if(S_BUILD_SAMPLES)
-  add_executable(sample_1 samples/simple/main.c)
-  target_link_libraries(sample_1 uv pico snail)
+if(SN_BUILD_SAMPLES)
+    add_executable(snail_sample_1
+            samples/simple/main.c)
+
+    target_link_libraries(snail_sample_1 uv pico snail)
 endif ()
 ########################################################################
 
 
 ########################################################################
-# SNAIL_TEST                                                           #
+# TEST_SUITS                                                           #
+# /test/*                                                              #
 ########################################################################
-# Include snail test project
-add_executable(snail_test test/sn_sock_loop_test.c
+set(sn_test_resources
         test/runner/test_runner.h
         test/runner/test_runner.c
         test/helpers/test_helpers.h
         test/helpers/test_helpers.c)
-target_link_libraries(snail_test PRIVATE snail)
 
-add_test(
-        NAME snail_test
-        COMMAND $<TARGET_FILE:snail_test>
-)
+set(sn_test_suits
+        "map"
+        "event_loop")
+
+foreach (test_suit IN LISTS sn_test_suits)
+    add_executable("${test_suit}_test" ${sn_test_resources} "test/${test_suit}_test.c")
+    target_link_libraries("${test_suit}_test" snail)
+    add_test(NAME "${test_suit}_test" COMMAND "$<TARGET_FILE:${test_suit}_test>")
+endforeach()
 ########################################################################

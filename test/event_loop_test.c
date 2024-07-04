@@ -1,4 +1,3 @@
-#include <snail.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,18 +5,9 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <signal.h>
-#include <time.h>
-#include "runner/test_runner.h"
+#include "snail.h"
 #include "helpers/test_helpers.h"
-
-const char *generate_rand_str(int length) {
-    char *str = malloc((sizeof(char) * length) + 1);
-    for (int i = 0; i < length - 1; i++){
-        str[i] = (char) (rand() % 26 + 65);
-    }
-    str[length] = 0;
-    return str;
-}
+#include "runner/test_runner.h"
 
 tr_test_result create_socket() {
     socket_handler_t sock_fd = th_connect_server("0.0.0.0", "3000", 5, 1);
@@ -125,7 +115,6 @@ int run_tests() {
 }
 
 int main() {
-    srand(time(NULL));
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -142,5 +131,5 @@ int main() {
 
     kill(pid, SIGTERM);
 
-    return status == 1 ? EXIT_SUCCESS : EXIT_FAILURE;
+    return status == true ? EXIT_SUCCESS : EXIT_FAILURE;
 }

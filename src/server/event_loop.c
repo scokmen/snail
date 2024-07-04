@@ -1,15 +1,14 @@
-#include <uv.h>
+#include "uv.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include <picohttpparser.h>
-#include "sn_http_code.h"
-#include "../sn_logger.h"
+#include "picohttpparser.h"
+#include "snail.h"
+#include "sn_logger.h"
 
 #define HTTP_MAX_TOTAL_HEADER_SIZE  (4096)                                   // 4KB for request headers.
 #define HTTP_MAX_SINGLE_HEADER_SIZE (1024)                                   // 1KB for single request header.
 #define HTTP_MAX_URI_SIZE           (1024)                                   // 1KB for request URI.
-#define HTTP_MAX_BODY_SIZE          (1024 * 1024)                            // 1MB for request body.
 #define HTTP_MAX_HEADER_COUNT       ((int)(HTTP_MAX_TOTAL_HEADER_SIZE / 8))  // Num of maximum headers.
 #define INC_SOCKET_BUF_SIZE         (65536)
 #define TCP_MAX_CON_BACKLOG         (128)
