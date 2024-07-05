@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef void (*sn_map_unregister_cb)(void *data);
+typedef void (*sn_map_unregister_cb)(const char* key, void *data);
 
 typedef struct sn_map_lln_t {
     bool active;

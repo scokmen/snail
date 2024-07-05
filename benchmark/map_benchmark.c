@@ -13,7 +13,7 @@ map_data *generate_node(int val) {
     return data;
 }
 
-void unregister_cb(void *data) {
+void unregister_cb(const char* key, void *data) {
     free(data);
 }
 

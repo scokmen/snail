@@ -1,0 +1,5 @@
+hyperfine --runs 100 ./map_benchmark
+
+Benchmark 1: ./map_benchmark
+  Time (mean ± σ):     171.5 ms ±  35.1 ms    [User: 161.3 ms, System: 1.6 ms]
+  Range (min … max):   156.7 ms … 515.9 ms    100 runs

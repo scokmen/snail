@@ -29,22 +29,22 @@ static sn_map_lln_t *create_linked_list_node(const char *key, void *data, sn_map
     return node;
 }
 
-static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target_bucket, bool scan_inactive_nodes) {
+static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target_bucket) {
     *target_bucket = (int) (djb2_hash((unsigned char *) key) % map->bucket_size);
     sn_map_ll_t linked_list = map->buckets[*target_bucket];
     sn_map_lln_t *node = NULL;
 
-    if (!scan_inactive_nodes && linked_list.count == 0) {
+    if (linked_list.count == 0) {
         return NULL;
     }
 
     node = linked_list.head;
     while (node != NULL) {
-        if (!scan_inactive_nodes && !node->active) {
+        if (!node->active) {
             node = node->next;
             continue;
         }
-        if (strcmp(node->label, key) == 0) {
+        if (node->label[0] == key[0] && strcmp(node->label, key) == 0) {
             return node;
         }
         node = node->next;
@@ -78,7 +78,7 @@ void sn_map_destroy(sn_map_t *map) {
         while (node != NULL) {
             next = node->next;
             if (node->active && node->unregister_cb != NULL) {
-                node->unregister_cb(node->data);
+                node->unregister_cb(node->label, node->data);
             }
             free(node);
             node = next;
@@ -90,10 +90,10 @@ void sn_map_destroy(sn_map_t *map) {
 
 bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb unregister_cb) {
     int bucket;
-    sn_map_lln_t *node = find_label_node(map, key, &bucket, true);
+    sn_map_lln_t *node = find_label_node(map, key, &bucket);
     if (node != NULL) {
         if (node->active && node->unregister_cb != NULL) {
-            node->unregister_cb(node->data);
+            node->unregister_cb(node->label, node->data);
         }
         node->active = true;
         node->unregister_cb = unregister_cb;
@@ -137,18 +137,18 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
 
 void *sn_map_get(sn_map_t *map, const char *key) {
     int bucket;
-    sn_map_lln_t *node = find_label_node(map, key, &bucket,  false);
+    sn_map_lln_t *node = find_label_node(map, key, &bucket);
     return (node == NULL || !node->active) ? NULL : node->data;
 }
 
 void sn_map_del(sn_map_t *map, const char *key) {
     int bucket;
-    sn_map_lln_t *node = find_label_node(map, key, &bucket,  false);
+    sn_map_lln_t *node = find_label_node(map, key, &bucket);
     if (node == NULL) {
         return;
     }
     if (node->unregister_cb != NULL) {
-        node->unregister_cb(node->data);
+        node->unregister_cb(node->label, node->data);
     }
     node->active = false;
     node->data = NULL;
@@ -158,6 +158,6 @@ void sn_map_del(sn_map_t *map, const char *key) {
 
 bool sn_map_has(sn_map_t *map, const char *key) {
     int bucket;
-    sn_map_lln_t *node = find_label_node(map, key, &bucket,  false);
+    sn_map_lln_t *node = find_label_node(map, key, &bucket);
     return !(node == NULL || !node->active);
 }

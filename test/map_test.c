@@ -9,7 +9,7 @@ int* generate_int_ptr(int val) {
     return data;
 }
 
-void destroy_int_ptr(void* ptr) {
+void destroy_int_ptr(const char* key, void* ptr) {
     if (ptr == NULL) {
         exit(EXIT_FAILURE);
     }

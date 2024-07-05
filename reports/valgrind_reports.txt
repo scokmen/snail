@@ -1,0 +1,10 @@
+valgrind --leak-check=yes ./map_benchmark
+
+==2302== HEAP SUMMARY:
+==2302==     in use at exit: 0 bytes in 0 blocks
+==2302==   total heap usage: 513,523 allocs, 513,523 frees, 3,226,968 bytes allocated
+==2302==
+==2302== All heap blocks were freed -- no leaks are possible
+==2302==
+==2302== For lists of detected and suppressed errors, rerun with: -s
+==2302== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
