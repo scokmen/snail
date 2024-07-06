@@ -1,6 +1,27 @@
 #ifndef SNAIL_HTTP_H
 #define SNAIL_HTTP_H
 
+#define GET                             1
+#define HEAD                            2
+#define POST                            3
+#define PUT                             4
+#define DELETE                          5
+#define CONNECT                         6
+#define OPTIONS                         7
+#define TRACE                           8
+#define PATH                            9
+
+#define HTTP_METHOD_MAP(XX)                                               \
+  XX(GET                             , "GET")                             \
+  XX(HEAD                            , "HEAD")                            \
+  XX(POST                            , "POST")                            \
+  XX(PUT                             , "PUT")                             \
+  XX(DELETE                          , "DELETE")                          \
+  XX(CONNECT                         , "CONNECT")                         \
+  XX(OPTIONS                         , "OPTIONS")                         \
+  XX(TRACE                           , "TRACE")                           \
+  XX(PATH                            , "PATH")                            \
+
 #define CONTINUE                        100
 #define SWITCHING_PROTOCOLS             101
 #define PROCESSING                      102
@@ -127,11 +148,17 @@
   XX(NETWORK_AUTHENTICATION_REQUIRED , "Network Authentication Required") \
 
 typedef enum {
-  #define DEF_HTTP_ENUM(code, _) HTTP_ ## code = code,
-    HTTP_CODE_MAP(DEF_HTTP_ENUM)
+  #define DEF_HTTP_METHOD_ENUM(code, _) HTTP_ ## code = code,
+    HTTP_METHOD_MAP(DEF_HTTP_METHOD_ENUM)
+  #undef DEF_HTTP_METHOD_ENUM
+} sn_http_method_t;
+
+typedef enum {
+  #define DEF_HTTP_CODE_ENUM(code, _) HTTP_ ## code = code,
+    HTTP_CODE_MAP(DEF_HTTP_CODE_ENUM)
   #undef DEF_HTTP_ENUM
 } sn_http_code_t;
 
-extern const char *sn_http_get_description(sn_http_code_t code);
+const char *sn_http_code_get_description(sn_http_code_t code);
 
 #endif //SNAIL_HTTP_H

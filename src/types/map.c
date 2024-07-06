@@ -1,7 +1,7 @@
 #include <stdlib.h>
-#include <printf.h>
 #include <string.h>
 #include <assert.h>
+#include "sn_common.h"
 #include "snail.h"
 
 SN_CONST_FN
@@ -17,11 +17,9 @@ static unsigned long djb2_hash(unsigned char *str) {
 }
 
 static sn_map_lln_t *create_linked_list_node(const char *key, void *data, sn_map_unregister_cb unregister_cb) {
-    sn_map_lln_t *node = malloc(sizeof (sn_map_lln_t));
-    if (node == NULL) {
-        return NULL;
-    }
-    node->active = true;
+    sn_map_lln_t *node;
+    MALLOC_OR_RETURN_NULL(node, sn_map_lln_t)
+    node->clean = true;
     node->next = NULL;
     node->data = data;
     node->label = key;
@@ -40,7 +38,7 @@ static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target
 
     node = linked_list.head;
     while (node != NULL) {
-        if (!node->active) {
+        if (!node->clean) {
             node = node->next;
             continue;
         }
@@ -55,10 +53,8 @@ static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target
 
 sn_map_t *sn_map_init(uint16_t bucket_size) {
     assert(bucket_size > 0);
-    sn_map_t *map = malloc(sizeof(sn_map_t));
-    if (map == NULL) {
-        return NULL;
-    }
+    sn_map_t *map;
+    MALLOC_OR_RETURN_NULL(map, sn_map_t)
     map->bucket_size = bucket_size;
     map->buckets = calloc(bucket_size, sizeof(sn_map_ll_t));
     if (map->buckets == NULL) {
@@ -77,7 +73,7 @@ void sn_map_destroy(sn_map_t *map) {
         }
         while (node != NULL) {
             next = node->next;
-            if (node->active && node->unregister_cb != NULL) {
+            if (node->clean && node->unregister_cb != NULL) {
                 node->unregister_cb(node->label, node->data);
             }
             free(node);
@@ -92,10 +88,10 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
     int bucket;
     sn_map_lln_t *node = find_label_node(map, key, &bucket);
     if (node != NULL) {
-        if (node->active && node->unregister_cb != NULL) {
+        if (node->clean && node->unregister_cb != NULL) {
             node->unregister_cb(node->label, node->data);
         }
-        node->active = true;
+        node->clean = true;
         node->unregister_cb = unregister_cb;
         node->data = data;
         return true;
@@ -112,14 +108,14 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
     }
 
     while (node->next != NULL) {
-        if (!node->active) {
+        if (!node->clean) {
             break;
         }
         node = node->next;
     }
 
-    if (!node->active) {
-        node->active = true;
+    if (!node->clean) {
+        node->clean = true;
         node->data = data;
         node->label = key;
         node->unregister_cb = unregister_cb;
@@ -138,7 +134,7 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
 void *sn_map_get(sn_map_t *map, const char *key) {
     int bucket;
     sn_map_lln_t *node = find_label_node(map, key, &bucket);
-    return (node == NULL || !node->active) ? NULL : node->data;
+    return (node == NULL || !node->clean) ? NULL : node->data;
 }
 
 void sn_map_del(sn_map_t *map, const char *key) {
@@ -150,7 +146,7 @@ void sn_map_del(sn_map_t *map, const char *key) {
     if (node->unregister_cb != NULL) {
         node->unregister_cb(node->label, node->data);
     }
-    node->active = false;
+    node->clean = false;
     node->data = NULL;
     node->unregister_cb = NULL;
     map->buckets[bucket].count--;
@@ -159,5 +155,31 @@ void sn_map_del(sn_map_t *map, const char *key) {
 bool sn_map_has(sn_map_t *map, const char *key) {
     int bucket;
     sn_map_lln_t *node = find_label_node(map, key, &bucket);
-    return !(node == NULL || !node->active);
+    return !(node == NULL || !node->clean);
+}
+
+size_t sn_map_length(sn_map_t *map) {
+    size_t length = 0;
+    for (int i = 0; i < map->bucket_size; i++) {
+        length += map->buckets[i].count;
+    }
+    return length;
+}
+
+void sn_map_traverse(sn_map_t *map, sn_map_traversal_cb traversal_cb) {
+    sn_map_lln_t *node;
+    for (int i = 0; i < map->bucket_size; i++) {
+        node = map->buckets[i].head;
+        if (node == NULL) {
+            continue;
+        }
+        while (node != NULL) {
+            if (!node->clean) {
+                node = node->next;
+                continue;
+            }
+            traversal_cb(node->label, node->data);
+            node = node->next;
+        }
+    }
 }

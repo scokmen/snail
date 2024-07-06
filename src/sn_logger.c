@@ -6,11 +6,11 @@ static int min_log_level = LOG_LEVEL_DEBUG;
 
 #define GET_OUTPUT_DEV(LEVEL) ((LEVEL < LOG_LEVEL_ERROR) ? stdout : stderr)
 
-#define WRITE_LOG(LEVEL, FMT) if (min_log_level <= LEVEL) {                      \
-                                    va_list args;                                \
-                                    va_start(args, FMT);                         \
-                                    vfprintf(GET_OUTPUT_DEV(LEVEL), fmt, args);  \
-                                    va_end(args);                                \
+#define WRITE_LOG(LEVEL, FMT) if (min_log_level <= LEVEL) {                    \
+                                  va_list args;                                \
+                                  va_start(args, FMT);                         \
+                                  vfprintf(GET_OUTPUT_DEV(LEVEL), fmt, args);  \
+                                  va_end(args);                                \
                               }
 
 void sn_log_set_level(int level) {

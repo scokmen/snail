@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "picohttpparser.h"
+#include <picohttpparser.h>
 #include "snail.h"
 #include "sn_logger.h"
 
@@ -151,7 +151,7 @@ static sn_http_code_t check_fail_fast_err(sock_http_data *http_data, int minor_v
 }
 
 static void send_fail_fast_response(sock_loop_data *loop_data, sn_http_code_t code) {
-    const char *response_text = sn_http_get_description(code);
+    const char *response_text = sn_http_code_get_description(code);
     sn_log_err("Http early return with Code=%d, Details=%s\n", code, response_text);
     asprintf(&(loop_data->http_data->response_buf),
              "HTTP/1.1 %d %s\r\nContent-Type: text/plain\r\nContent-Length: %lu\r\n\r\n%s",

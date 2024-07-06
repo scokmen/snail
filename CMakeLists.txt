@@ -45,7 +45,8 @@ set(sn_sources
         src/server/http.c
         src/server/event_loop.c
         src/sn_logger.h
-        src/sn_logger.c)
+        src/sn_logger.c
+        src/sn_common.h)
 
 add_library(snail STATIC ${sn_sources})
 
