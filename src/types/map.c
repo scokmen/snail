@@ -1,20 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include "sn_common.h"
+#include "../sn_common.h"
 #include "snail.h"
-
-SN_CONST_FN
-static unsigned long djb2_hash(unsigned char *str) {
-    int c;
-    unsigned long hash = 5381;
-
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c;
-    }
-
-    return hash;
-}
 
 static sn_map_lln_t *create_linked_list_node(const char *key, void *data, sn_map_unregister_cb unregister_cb) {
     sn_map_lln_t *node;
@@ -51,17 +38,15 @@ static sn_map_lln_t *find_label_node(sn_map_t *map, const char *key, int* target
     return NULL;
 }
 
-sn_map_t *sn_map_init(uint16_t bucket_size) {
-    assert(bucket_size > 0);
-    sn_map_t *map;
-    MALLOC_OR_RETURN_NULL(map, sn_map_t)
-    map->bucket_size = bucket_size;
-    map->buckets = calloc(bucket_size, sizeof(sn_map_ll_t));
-    if (map->buckets == NULL) {
+int sn_map_init(sn_map_t **map, uint16_t bucket_size) {
+    MALLOC_OR_RETURN_ERR(*map, sn_map_t)
+    (*map)->bucket_size = bucket_size;
+    (*map)->buckets = calloc(bucket_size, sizeof(sn_map_ll_t));
+    if ((*map)->buckets == NULL) {
         free(map);
-        return NULL;
+        return SN_ERR_MALLOC_FAILED;
     }
-    return map;
+    return 0;
 }
 
 void sn_map_destroy(sn_map_t *map) {
@@ -84,7 +69,7 @@ void sn_map_destroy(sn_map_t *map) {
     free(map);
 }
 
-bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb unregister_cb) {
+int sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb unregister_cb) {
     int bucket;
     sn_map_lln_t *node = find_label_node(map, key, &bucket);
     if (node != NULL) {
@@ -94,17 +79,17 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
         node->clean = true;
         node->unregister_cb = unregister_cb;
         node->data = data;
-        return true;
+        return 0;
     }
     node = map->buckets[bucket].head;
     if (node == NULL) {
         node = create_linked_list_node(key, data, unregister_cb);
         if (node == NULL) {
-            return false;
+            return SN_ERR_MALLOC_FAILED;
         }
         map->buckets[bucket].head = node;
         map->buckets[bucket].count++;
-        return true;
+        return 0;
     }
 
     while (node->next != NULL) {
@@ -120,15 +105,15 @@ bool sn_map_set(sn_map_t *map, const char *key, void *data, sn_map_unregister_cb
         node->label = key;
         node->unregister_cb = unregister_cb;
         map->buckets[bucket].count++;
-        return true;
+        return 0;
     }
 
     node->next = create_linked_list_node(key, data, unregister_cb);
     if (node->next != NULL) {
         map->buckets[bucket].count++;
-        return true;
+        return 0;
     }
-    return false;
+    return SN_ERR_MALLOC_FAILED;
 }
 
 void *sn_map_get(sn_map_t *map, const char *key) {
@@ -164,22 +149,4 @@ size_t sn_map_length(sn_map_t *map) {
         length += map->buckets[i].count;
     }
     return length;
-}
-
-void sn_map_traverse(sn_map_t *map, sn_map_traversal_cb traversal_cb) {
-    sn_map_lln_t *node;
-    for (int i = 0; i < map->bucket_size; i++) {
-        node = map->buckets[i].head;
-        if (node == NULL) {
-            continue;
-        }
-        while (node != NULL) {
-            if (!node->clean) {
-                node = node->next;
-                continue;
-            }
-            traversal_cb(node->label, node->data);
-            node = node->next;
-        }
-    }
 }

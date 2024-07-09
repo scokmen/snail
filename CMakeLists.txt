@@ -43,10 +43,12 @@ target_include_directories(pico
 set(sn_sources
         src/types/map.c
         src/server/http.c
+        src/server/router.c
         src/server/event_loop.c
         src/sn_logger.h
         src/sn_logger.c
-        src/sn_common.h)
+        src/sn_common.h
+        src/sn_common.c)
 
 add_library(snail STATIC ${sn_sources})
 

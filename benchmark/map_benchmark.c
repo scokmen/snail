@@ -7,13 +7,13 @@ typedef struct {
     int val;
 } map_data;
 
-map_data *generate_node(int val) {
+map_data *generate_map_data(int val) {
     map_data * data = malloc(sizeof (map_data));
     data->val = val;
     return data;
 }
 
-void unregister_cb(const char* key, void *data) {
+void unregister_callback(const char* key, void *data) {
     free(data);
 }
 
@@ -34,6 +34,7 @@ const char* pick_random_key(const char** keys, int count) {
 }
 
 void run_sn_map_memcheck(int16_t bucket_size, int count, int key_length, int num_of_iteration, int num_of_random_access) {
+    sn_map_t *map;
     const char** keys = calloc(count, sizeof (char*));
     if (keys == NULL) {
         exit(EXIT_FAILURE);
@@ -45,10 +46,12 @@ void run_sn_map_memcheck(int16_t bucket_size, int count, int key_length, int num
         }
     }
 
-    sn_map_t *map = sn_map_init(bucket_size);
+    if (sn_map_init(&map, bucket_size) != 0) {
+        exit(EXIT_FAILURE);
+    }
 
     for (int i = 0; i < count; i++) {
-        bool result = sn_map_set(map, keys[i], generate_node(1), unregister_cb);
+        bool result = sn_map_set(map, keys[i], generate_map_data(1), unregister_callback);
         if (!result) {
             exit(EXIT_FAILURE);
         }
@@ -69,7 +72,7 @@ void run_sn_map_memcheck(int16_t bucket_size, int count, int key_length, int num
         // Random Overwrite
         for (int i = 0; i < num_of_random_access; i++) {
             const char* key = pick_random_key(keys, count);
-            if (!sn_map_set(map, key, generate_node(1), unregister_cb)) {
+            if (!sn_map_set(map, key, generate_map_data(1), unregister_callback)) {
                 exit(EXIT_FAILURE);
             }
         }
@@ -77,7 +80,7 @@ void run_sn_map_memcheck(int16_t bucket_size, int count, int key_length, int num
         // Random Delete
         for (int i = 0; i < 10000; i++) {
             const char* key = pick_random_key(keys, count);
-            if (!sn_map_set(map, key, generate_node(1), unregister_cb)) {
+            if (!sn_map_set(map, key, generate_map_data(1), unregister_callback)) {
                 exit(EXIT_FAILURE);
             }
         }
@@ -94,6 +97,7 @@ void run_sn_map_memcheck(int16_t bucket_size, int count, int key_length, int num
 
 int main(int argc, char **argv) {
     srand(time(NULL));
+
     run_sn_map_memcheck(1024, 4096, 8, 3, 1000);
     run_sn_map_memcheck(1024, 4096, 2, 3, 1000);
     run_sn_map_memcheck(1024, 4096, 1, 3, 1000);
@@ -106,5 +110,6 @@ int main(int argc, char **argv) {
     run_sn_map_memcheck(4,    4096, 8, 3, 1000);
     run_sn_map_memcheck(4,    4096, 2, 3, 1000);
     run_sn_map_memcheck(4,    4096, 1, 3, 1000);
+
     exit(EXIT_SUCCESS);
 }

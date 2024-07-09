@@ -11,16 +11,16 @@
 #define TRACE                           8
 #define PATH                            9
 
-#define HTTP_METHOD_MAP(XX)                                               \
-  XX(GET                             , "GET")                             \
-  XX(HEAD                            , "HEAD")                            \
-  XX(POST                            , "POST")                            \
-  XX(PUT                             , "PUT")                             \
-  XX(DELETE                          , "DELETE")                          \
-  XX(CONNECT                         , "CONNECT")                         \
-  XX(OPTIONS                         , "OPTIONS")                         \
-  XX(TRACE                           , "TRACE")                           \
-  XX(PATH                            , "PATH")                            \
+#define HTTP_METHOD_MAP(XX)                                                  \
+  XX(GET                                , "GET")                             \
+  XX(HEAD                               , "HEAD")                            \
+  XX(POST                               , "POST")                            \
+  XX(PUT                                , "PUT")                             \
+  XX(DELETE                             , "DELETE")                          \
+  XX(CONNECT                            , "CONNECT")                         \
+  XX(OPTIONS                            , "OPTIONS")                         \
+  XX(TRACE                              , "TRACE")                           \
+  XX(PATH                               , "PATH")                            \
 
 #define CONTINUE                        100
 #define SWITCHING_PROTOCOLS             101
@@ -84,68 +84,68 @@
 #define NOT_EXTENDED                    510
 #define NETWORK_AUTHENTICATION_REQUIRED 511
 
-#define HTTP_CODE_MAP(XX)                                                 \
-  XX(CONTINUE                        , "Continue")                        \
-  XX(SWITCHING_PROTOCOLS             , "Switching Protocols")             \
-  XX(PROCESSING                      , "Processing")                      \
-  XX(OK                              , "OK")                              \
-  XX(CREATED                         , "Created")                         \
-  XX(ACCEPTED                        , "Accepted")                        \
-  XX(NON_AUTHORITATIVE_INFORMATION   , "Non-Authoritative Information")   \
-  XX(NO_CONTENT                      , "No Content")                      \
-  XX(RESET_CONTENT                   , "Reset Content")                   \
-  XX(PARTIAL_CONTENT                 , "Partial Content")                 \
-  XX(MULTI_STATUS                    , "Multi-Status")                    \
-  XX(ALREADY_REPORTED                , "Already Reported")                \
-  XX(IM_USED                         , "IM Used")                         \
-  XX(MULTIPLE_CHOICES                , "Multiple Choices")                \
-  XX(MOVED_PERMANENTLY               , "Moved Permanently")               \
-  XX(FOUND                           , "Found")                           \
-  XX(SEE_OTHER                       , "See Other")                       \
-  XX(NOT_MODIFIED                    , "Not Modified")                    \
-  XX(USE_PROXY                       , "Use Proxy")                       \
-  XX(SWITCH_PROXY                    , "Switch Proxy")                    \
-  XX(TEMPORARY_REDIRECT              , "Temporary Redirect ")             \
-  XX(PERMANENT_REDIRECT              , "Permanent Redirect")              \
-  XX(BAD_REQUEST                     , "Bad Request")                     \
-  XX(UNAUTHORIZED                    , "Unauthorized")                    \
-  XX(PAYMENT_REQUIRED                , "Payment Required")                \
-  XX(FORBIDDEN                       , "Forbidden")                       \
-  XX(NOT_FOUND                       , "Not Found")                       \
-  XX(METHOD_NOT_ALLOWED              , "Method Not Allowed")              \
-  XX(NOT_ACCEPTABLE                  , "Not Acceptable")                  \
-  XX(PROXY_AUTHENTICATION_REQUIRED   , "Proxy Authentication Required")   \
-  XX(REQUEST_TIMEOUT                 , "Request Timeout")                 \
-  XX(CONFLICT                        , "Conflict")                        \
-  XX(GONE                            , "Gone")                            \
-  XX(LENGTH_REQUIRED                 , "Length Required")                 \
-  XX(PRECONDITION_FAILED             , "Precondition Failed")             \
-  XX(PAYLOAD_TOO_LARGE               , "Payload Too Large")               \
-  XX(URI_TOO_LONG                    , "URI Too Long")                    \
-  XX(UNSUPPORTED_MEDIA_TYPE          , "Unsupported Media Type")          \
-  XX(RANGE_NOT_SATISFIABLE           , "Range Not Satisfiable")           \
-  XX(EXPECTATION_FAILED              , "Expectation Failed")              \
-  XX(I_AM_A_TEAPOT                   , "I'm a teapot")                    \
-  XX(MISDIRECTED_REQUEST             , "Misdirected Request")             \
-  XX(UNPROCESSABLE_ENTITY            , "Unprocessable Content")           \
-  XX(LOCKED                          , "Locked")                          \
-  XX(FAILED_DEPENDENCY               , "Failed Dependency")               \
-  XX(UPGRADE_REQUIRED                , "Upgrade Required")                \
-  XX(PRECONDITION_REQUIRED           , "Precondition Required")           \
-  XX(TOO_MANY_REQUESTS               , "Too Many Requests")               \
-  XX(REQUEST_HEADER_FIELDS_TOO_LARGE , "Request Header Fields Too Large") \
-  XX(UNAVAILABLE_FOR_LEGAL_REASONS   , "Unavailable For Legal Reasons")   \
-  XX(INTERNAL_SERVER_ERROR           , "Internal Server Error")           \
-  XX(NOT_IMPLEMENTED                 , "Not Implemented")                 \
-  XX(BAD_GATEWAY                     , "Bad Gateway")                     \
-  XX(SERVICE_UNAVAILABLE             , "Service Unavailable")             \
-  XX(GATEWAY_TIMEOUT                 , "Gateway Timeout")                 \
-  XX(HTTP_VERSION_NOT_SUPPORTED      , "HTTP Version Not Supported")      \
-  XX(VARIANT_ALSO_NEGOTIATES         , "Variant Also Negotiates")         \
-  XX(INSUFFICIENT_STORAGE            , "Insufficient Storage")            \
-  XX(LOOP_DETECTED                   , "Loop Detected")                   \
-  XX(NOT_EXTENDED                    , "Not Extended")                    \
-  XX(NETWORK_AUTHENTICATION_REQUIRED , "Network Authentication Required") \
+#define HTTP_CODE_MAP(XX)                                                    \
+  XX(CONTINUE                           , "Continue")                        \
+  XX(SWITCHING_PROTOCOLS                , "Switching Protocols")             \
+  XX(PROCESSING                         , "Processing")                      \
+  XX(OK                                 , "OK")                              \
+  XX(CREATED                            , "Created")                         \
+  XX(ACCEPTED                           , "Accepted")                        \
+  XX(NON_AUTHORITATIVE_INFORMATION      , "Non-Authoritative Information")   \
+  XX(NO_CONTENT                         , "No Content")                      \
+  XX(RESET_CONTENT                      , "Reset Content")                   \
+  XX(PARTIAL_CONTENT                    , "Partial Content")                 \
+  XX(MULTI_STATUS                       , "Multi-Status")                    \
+  XX(ALREADY_REPORTED                   , "Already Reported")                \
+  XX(IM_USED                            , "IM Used")                         \
+  XX(MULTIPLE_CHOICES                   , "Multiple Choices")                \
+  XX(MOVED_PERMANENTLY                  , "Moved Permanently")               \
+  XX(FOUND                              , "Found")                           \
+  XX(SEE_OTHER                          , "See Other")                       \
+  XX(NOT_MODIFIED                       , "Not Modified")                    \
+  XX(USE_PROXY                          , "Use Proxy")                       \
+  XX(SWITCH_PROXY                       , "Switch Proxy")                    \
+  XX(TEMPORARY_REDIRECT                 , "Temporary Redirect ")             \
+  XX(PERMANENT_REDIRECT                 , "Permanent Redirect")              \
+  XX(BAD_REQUEST                        , "Bad Request")                     \
+  XX(UNAUTHORIZED                       , "Unauthorized")                    \
+  XX(PAYMENT_REQUIRED                   , "Payment Required")                \
+  XX(FORBIDDEN                          , "Forbidden")                       \
+  XX(NOT_FOUND                          , "Not Found")                       \
+  XX(METHOD_NOT_ALLOWED                 , "Method Not Allowed")              \
+  XX(NOT_ACCEPTABLE                     , "Not Acceptable")                  \
+  XX(PROXY_AUTHENTICATION_REQUIRED      , "Proxy Authentication Required")   \
+  XX(REQUEST_TIMEOUT                    , "Request Timeout")                 \
+  XX(CONFLICT                           , "Conflict")                        \
+  XX(GONE                               , "Gone")                            \
+  XX(LENGTH_REQUIRED                    , "Length Required")                 \
+  XX(PRECONDITION_FAILED                , "Precondition Failed")             \
+  XX(PAYLOAD_TOO_LARGE                  , "Payload Too Large")               \
+  XX(URI_TOO_LONG                       , "URI Too Long")                    \
+  XX(UNSUPPORTED_MEDIA_TYPE             , "Unsupported Media Type")          \
+  XX(RANGE_NOT_SATISFIABLE              , "Range Not Satisfiable")           \
+  XX(EXPECTATION_FAILED                 , "Expectation Failed")              \
+  XX(I_AM_A_TEAPOT                      , "I'm a teapot")                    \
+  XX(MISDIRECTED_REQUEST                , "Misdirected Request")             \
+  XX(UNPROCESSABLE_ENTITY               , "Unprocessable Content")           \
+  XX(LOCKED                             , "Locked")                          \
+  XX(FAILED_DEPENDENCY                  , "Failed Dependency")               \
+  XX(UPGRADE_REQUIRED                   , "Upgrade Required")                \
+  XX(PRECONDITION_REQUIRED              , "Precondition Required")           \
+  XX(TOO_MANY_REQUESTS                  , "Too Many Requests")               \
+  XX(REQUEST_HEADER_FIELDS_TOO_LARGE    , "Request Header Fields Too Large") \
+  XX(UNAVAILABLE_FOR_LEGAL_REASONS      , "Unavailable For Legal Reasons")   \
+  XX(INTERNAL_SERVER_ERROR              , "Internal Server Error")           \
+  XX(NOT_IMPLEMENTED                    , "Not Implemented")                 \
+  XX(BAD_GATEWAY                        , "Bad Gateway")                     \
+  XX(SERVICE_UNAVAILABLE                , "Service Unavailable")             \
+  XX(GATEWAY_TIMEOUT                    , "Gateway Timeout")                 \
+  XX(HTTP_VERSION_NOT_SUPPORTED         , "HTTP Version Not Supported")      \
+  XX(VARIANT_ALSO_NEGOTIATES            , "Variant Also Negotiates")         \
+  XX(INSUFFICIENT_STORAGE               , "Insufficient Storage")            \
+  XX(LOOP_DETECTED                      , "Loop Detected")                   \
+  XX(NOT_EXTENDED                       , "Not Extended")                    \
+  XX(NETWORK_AUTHENTICATION_REQUIRED    , "Network Authentication Required") \
 
 typedef enum {
   #define DEF_HTTP_METHOD_ENUM(code, _) HTTP_ ## code = code,
