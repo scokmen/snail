@@ -9,16 +9,41 @@
 #    if __has_attribute (format)
 #      define TR_FORMAT(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
 #    else
-#      define TR_FORMAT(FORM)
+#      define TR_FORMAT(FROM)
 #    endif
 #  else
-#    define TR_FORMAT(FORM)
+#    define TR_FORMAT(FROM)
 #  endif
 #else
 #  define TR_FORMAT(FROM)
 #endif
 
 #define MAX_CASE_IN_SUIT (32)
+
+#define ASSERT_RESULT(RESULT, EXP) RESULT = EXP;                                             \
+                                   if (!EXP.status) {                                        \
+                                       return RESULT;                                        \
+                                   }                                                         \
+
+#define ASSERT_SUCCESS_CODE(EXP)   if (EXP != 0) {                                           \
+                                       return tr_fail("Expected success return code!");      \
+                                   }                                                         \
+
+#define ASSERT_EQ(EXP, ACT)        if (EXP != ACT) {                                         \
+                                       return tr_fail("Expected: Equal, Found: Non Equal!"); \
+                                   }                                                         \
+
+#define ASSERT_TRUE(EXP)           if (EXP != true) {                                        \
+                                       return tr_fail("Expected: True, Found: False!");      \
+                                   }                                                         \
+
+#define ASSERT_FALSE(EXP)          if (EXP != false) {                                       \
+                                       return tr_fail("Expected: False, Found: True!");      \
+                                   }                                                         \
+
+#define ASSERT_NULL(EXP)           if (EXP != NULL) {                                        \
+                                       return tr_fail("Expected: NULL, Found: NON_NULL!");   \
+                                   }                                                         \
 
 typedef struct tr_test_result {
     bool status;
@@ -32,30 +57,30 @@ typedef tr_test_result (*tr_test_runner)(const void *args);
 
 typedef tr_test_result (*tr_tear_down_callback)(const void *args);
 
-typedef struct tr_test_case {
+typedef struct {
     const char *name;
     tr_tear_up_callback tear_up;
     tr_test_runner runner;
     tr_tear_down_callback tear_down;
 } tr_test_case;
 
-typedef struct tr_test_suit {
-    int length;
+typedef struct {
+    int count;
     const char *name;
     tr_test_case *cases[MAX_CASE_IN_SUIT];
 } tr_test_suit;
 
 TR_FORMAT(1)
-tr_test_result tr_success(char *fmt, ...);
-
-TR_FORMAT(1)
 tr_test_result tr_fail(char *fmt, ...);
 
 TR_FORMAT(2)
-tr_test_result tr_success_ext(void *data, char *fmt, ...);
+tr_test_result tr_fail_ext(void *data, char *fmt, ...);
+
+TR_FORMAT(1)
+tr_test_result tr_success(char *fmt, ...);
 
 TR_FORMAT(2)
-tr_test_result tr_fail_ext(void *data, char *fmt, ...);
+tr_test_result tr_success_ext(void *data, char *fmt, ...);
 
 tr_test_suit *tr_new_suit(const char *name);
 
@@ -63,6 +88,6 @@ tr_test_case *tr_new_case(const char *name, tr_tear_up_callback tear_up, tr_test
 
 void tr_add_test_case(tr_test_suit *suit, tr_test_case *new_case);
 
-bool tr_run_suit(tr_test_suit *suit);
+bool tr_run_suit(tr_test_suit *suit, char **suits, int count);
 
 #endif //SNAIL_TEST_RUNNER_H

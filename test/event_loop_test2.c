@@ -11,13 +11,13 @@
 #include "runner/test_runner.h"
 
 tr_test_result create_socket() {
-    socket_handler_t sock_fd = th_connect_server("0.0.0.0", "3000", 5, 1);
+    int sock_fd = th_connect_server("0.0.0.0", "3000", 5, 1);
 
     if (sock_fd < 0) {
         return tr_fail("Cannot create socket.\n");
     }
 
-    socket_handler_t *args = malloc(sizeof(socket_handler_t));
+    int *args = malloc(sizeof(int));
     if (args == NULL) {
         return tr_fail("Cannot allocate memory.\n");
     }
@@ -32,13 +32,13 @@ tr_test_result close_socket(const void *args) {
         return tr_success("Socket is empty.\n");
     }
 
-    close(*((socket_handler_t *) args));
+    close(*((int *) args));
 
     return tr_success("Socket was closed.\n");
 }
 
-tr_test_result send_request_assert_response(socket_handler_t sock_fd, const char *request, http_code_t expected_http_code) {
-    http_code_t actual_http_code;
+tr_test_result send_request_assert_response(int sock_fd, const char *request, int expected_http_code) {
+    int actual_http_code;
     ssize_t byte_sent = 0, total_byte_sent = 0;
     size_t request_size = 0;
     request_size = (size_t) strlen(request);
@@ -65,24 +65,24 @@ tr_test_result send_request_assert_response(socket_handler_t sock_fd, const char
 
 tr_test_result valid_http_request(const void *args) {
     char *request = "GET /index.html HTTP/1.1\r\nHost:localhost\r\n\r\n";
-    return send_request_assert_response(*((socket_handler_t *) args), request, 200);
+    return send_request_assert_response(*((int*) args), request, 200);
 }
 
 tr_test_result invalid_http_version(const void *args) {
     char *request = "GET /index.html HTTP/1.3\r\nHost:localhost\r\n\r\n";
-    return send_request_assert_response(*((socket_handler_t *) args), request, 505);
+    return send_request_assert_response(*((int*) args), request, 505);
 }
 
 tr_test_result too_long_uri(const void *args) {
     char *request;
     asprintf(&request, "GET /%s HTTP/1.1\r\nHost:localhost\r\n\r\n", generate_rand_str(1025));
-    return send_request_assert_response(*((socket_handler_t *) args), request, 414);
+    return send_request_assert_response(*((int*) args), request, 414);
 }
 
 tr_test_result too_large_header_single(const void *args) {
     char *request;
     asprintf(&request, "GET /path HTTP/1.1\r\nHeader-Name:%s\r\n\r\n", generate_rand_str(1015));
-    return send_request_assert_response(*((socket_handler_t *) args), request, 431);
+    return send_request_assert_response(*((int*) args), request, 431);
 }
 
 tr_test_result too_large_header_total(const void *args) {
@@ -96,7 +96,7 @@ tr_test_result too_large_header_total(const void *args) {
     asprintf(&request, "GET /path HTTP/1.1\r\nHost:localhost\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n",
              headers[0], headers[1], headers[2], headers[3]);
 
-    return send_request_assert_response(*((socket_handler_t *) args), request, 431);
+    return send_request_assert_response(*((int*) args), request, 431);
 }
 
 int run_tests() {

@@ -1,10 +1,18 @@
-valgrind --leak-check=yes ./map_benchmark
+valgrind --leak-check=yes ./map_bench
 
-==2302== HEAP SUMMARY:
-==2302==     in use at exit: 0 bytes in 0 blocks
-==2302==   total heap usage: 513,523 allocs, 513,523 frees, 3,226,968 bytes allocated
-==2302==
-==2302== All heap blocks were freed -- no leaks are possible
-==2302==
-==2302== For lists of detected and suppressed errors, rerun with: -s
-==2302== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==2403== HEAP SUMMARY:
+==2403==     in use at exit: 0 bytes in 0 blocks
+==2403==   total heap usage: 194,468 allocs, 194,468 frees, 2,519,072 bytes allocated
+==2403==
+==2403== All heap blocks were freed -- no leaks are possible
+==2403==
+==2403== For lists of detected and suppressed errors, rerun with: -s
+==2403== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+valgrind --leak-check=yes ./dlist_bench
+
+==7854== HEAP SUMMARY:
+==7854==     in use at exit: 0 bytes in 0 blocks
+==7854==   total heap usage: 161,840 allocs, 161,840 frees, 2,912,320 bytes allocated
+==7854==
+==7854== All heap blocks were freed -- no leaks are possible

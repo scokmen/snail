@@ -1,0 +1,7 @@
+dlist:first_and_last
+dlist:search_and_get
+dlist:search_and_del
+dlist:insertion_and_deletion
+map:crud_operations
+map:hash_collision
+map:map_length

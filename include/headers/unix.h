@@ -32,6 +32,11 @@
 #  else
 #    define SN_NONNULL(...)
 #  endif
+#  if __has_attribute (warn_unused_result)
+#    define SN_USE_RESULT __attribute__ ((warn_unused_result))
+#  else
+#    define SN_USE_RESULT
+#  endif
 #else
 #  define SN_BUFFER
 #  define SN_UNUSED
@@ -39,6 +44,7 @@
 #  define SN_FORMAT(FROM)
 #  define SN_CONST_FN
 #  define SN_NONNULL(...)
+#  define SN_USE_RESULT
 #endif
 
 #endif //SNAIL_UNIX_H

@@ -10,9 +10,12 @@ typedef enum {
 } sn_handler_type;
 
 #define HANDLER_PROPS const char *path;                                       \
-                      uint8_t middleware;                                     \
                       sn_handler_type type;                                   \
-                      sn_route_handler_cb middlewares[MIDDLEWARE_LIMIT];      \
+                      struct {                                                \
+                          int size;                                           \
+                          int capacity;                                       \
+                          sn_route_handler_cb *handlers;                      \
+                      } middlewares;                                          \
 
 typedef struct {
     sn_map_t *context;
@@ -46,13 +49,13 @@ typedef struct {
 } sn_route_group_t;
 
 SN_NONNULL(1, 3, 4)
-int sn_routing_router_init(sn_router_t **router, sn_http_method_t method, const char *path, sn_route_handler_cb action);
+int sn_routing_init(sn_router_t **router, sn_http_method_t method, const char *path, sn_route_handler_cb action);
 
 SN_NONNULL(1, 2)
-int sn_routing_rgroup_init(sn_route_group_t **route_group, const char *path);
+int sn_routing_init_group(sn_route_group_t **route_group, const char *path);
 
 SN_NONNULL(1, 2)
-void sn_routing_rgroup_add_submodule(sn_route_group_t *route_group, sn_handler_t *handler);
+int sn_routing_add_group(sn_route_group_t *route_group, sn_handler_t *handler);
 
 SN_NONNULL(1, 2)
 int sn_routing_add_middleware(sn_handler_t *handler, sn_route_handler_cb middleware);

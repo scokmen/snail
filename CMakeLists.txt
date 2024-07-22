@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 3.16.3)
 project(snail LANGUAGES C)
 
-include(CMakeDependentOption)
+# Variables
+set(CMAKE_C_STANDARD  11)
+set(LIBRARY_PATH      "src")
+set(VENDORS_PATH      "vendors")
+set(TEST_PATH         "test")
+set(SAMPLES_PATH      "samples")
+set(BENCHMARKS_PATH   "benchmark")
+set(TEST_CASES_SOURCE "CTestCases.txt")
 
-set(CMAKE_C_STANDARD 11)
-set(LIBRARY_PATH "src")
-set(VENDORS_PATH "vendors")
-set(TEST_PATH "test")
-set(SAMPLES_PATH "samples")
-set(BENCHMARKS_PATH "benchmark")
-
+# CTEST
+include(CTest)
+set(CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 enable_testing()
 
 ########################################################################
@@ -40,17 +43,18 @@ target_include_directories(pico
 # SNAIL                                                                #
 # https://github.com/scokmen/snail                                     #
 ########################################################################
-set(sn_sources
-        src/types/map.c
+set(snail_resources
         src/server/http.c
         src/server/router.c
         src/server/event_loop.c
         src/sn_logger.h
         src/sn_logger.c
         src/sn_common.h
-        src/sn_common.c)
+        src/sn_common.c
+        src/types/map.c
+        src/types/dlist.c)
 
-add_library(snail STATIC ${sn_sources})
+add_library(snail STATIC ${snail_resources})
 
 target_include_directories(snail
         PUBLIC
@@ -67,12 +71,12 @@ target_link_libraries(snail pico uv)
 # SAMPLES                                                              #
 # /samples/*                                                           #
 ########################################################################
-set(sn_sample_apps
+set(sample_applications
         "simple_server")
 
-foreach (sample_app IN LISTS sn_sample_apps)
-    add_executable("${sample_app}_sample" "${SAMPLES_PATH}/${sample_app}.c")
-    target_link_libraries("${sample_app}_sample" snail)
+foreach (sample_application IN LISTS sample_applications)
+    add_executable("${sample_application}_sample" "${SAMPLES_PATH}/${sample_application}.c")
+    target_link_libraries("${sample_application}_sample" snail)
 endforeach()
 ########################################################################
 
@@ -81,20 +85,33 @@ endforeach()
 # TEST_SUITS                                                           #
 # /test/*                                                              #
 ########################################################################
-set(sn_test_resources
+set(test_resources
         ${TEST_PATH}/runner/test_runner.h
         ${TEST_PATH}/runner/test_runner.c
         ${TEST_PATH}/helpers/test_helpers.h
         ${TEST_PATH}/helpers/test_helpers.c)
 
-set(sn_test_suits
-        "map"
-        "event_loop")
+# Discover the test files using glob "*_test.c"
+file(GLOB TEST_FILES "${TEST_PATH}/*_test.c")
 
-foreach (test_suit IN LISTS sn_test_suits)
-    add_executable("${test_suit}_test" ${sn_test_resources} "${TEST_PATH}/${test_suit}_test.c")
-    target_link_libraries("${test_suit}_test" snail)
-    add_test(NAME "${test_suit}_test" COMMAND "$<TARGET_FILE:${test_suit}_test>")
+# Read test cases from "CTestCases.txt"
+file(STRINGS "${TEST_CASES_SOURCE}" TEST_FILE_AND_CASES)
+
+# Discover available test cases and add test for each of them.
+foreach(TEST_FILE_PATH IN LISTS TEST_FILES)
+    get_filename_component(TEST_FILE_WITH_SUFFIX "${TEST_FILE_PATH}" NAME_WLE)
+    string(REPLACE "_test" "" TEST_FILE "${TEST_FILE_WITH_SUFFIX}")
+    add_executable("${TEST_FILE_WITH_SUFFIX}" ${test_resources} "${TEST_FILE_PATH}")
+    target_link_libraries("${TEST_FILE_WITH_SUFFIX}" snail)
+    foreach(TEST_FILE_AND_CASE IN LISTS TEST_FILE_AND_CASES)
+        if (TEST_FILE_AND_CASE MATCHES "^#.*")
+            continue()
+        endif()
+        if (TEST_FILE_AND_CASE MATCHES "^${TEST_FILE}:.*")
+            string(REPLACE "${TEST_FILE}:" "" TEST_CASE "${TEST_FILE_AND_CASE}")
+            add_test(NAME "${TEST_FILE_AND_CASE}" COMMAND "$<TARGET_FILE:${TEST_FILE_WITH_SUFFIX}>" "${TEST_CASE}")
+        endif ()
+    endforeach()
 endforeach()
 ########################################################################
 
@@ -103,11 +120,12 @@ endforeach()
 # BENCHMARKS                                                           #
 # /memcheck/*                                                          #
 ########################################################################
-set(sn_benchmarks
-        "map")
+# Discover the bench files using glob "*_bench.c"
+file(GLOB BENCHMARKS_FILES "${BENCHMARKS_PATH}/*_bench.c")
 
-foreach (benchmark IN LISTS sn_benchmarks)
-    add_executable("${benchmark}_benchmark" "${BENCHMARKS_PATH}/${benchmark}_benchmark.c")
-    target_link_libraries("${benchmark}_benchmark" snail)
+foreach (BENCHMARKS_FILE IN LISTS BENCHMARKS_FILES)
+    get_filename_component(BENCHMARKS_FILE_NAME "${BENCHMARKS_FILE}" NAME_WLE)
+    add_executable("${BENCHMARKS_FILE_NAME}" "${BENCHMARKS_PATH}/${BENCHMARKS_FILE_NAME}.c")
+    target_link_libraries("${BENCHMARKS_FILE_NAME}" snail)
 endforeach()
 ########################################################################
