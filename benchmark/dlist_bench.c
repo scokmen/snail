@@ -1,6 +1,6 @@
-#include <snail.h>
 #include <stdlib.h>
 #include <time.h>
+#include "snail.h"
 
 typedef struct {
     int val;

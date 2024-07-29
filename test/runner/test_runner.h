@@ -3,47 +3,24 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-
-#if (defined(__GCC__) || defined(__clang__))
-#  ifdef __has_attribute
-#    if __has_attribute (format)
-#      define TR_FORMAT(FROM) __attribute__ ((format (printf, (FROM), (FROM + 1))))
-#    else
-#      define TR_FORMAT(FROM)
-#    endif
-#  else
-#    define TR_FORMAT(FROM)
-#  endif
-#else
-#  define TR_FORMAT(FROM)
-#endif
+#include "snail.h"
 
 #define MAX_CASE_IN_SUIT (32)
 
-#define ASSERT_RESULT(RESULT, EXP) RESULT = EXP;                                             \
-                                   if (!EXP.status) {                                        \
-                                       return RESULT;                                        \
-                                   }                                                         \
+#define ASSERT_RESULT(RESULT, EXP) RESULT = EXP;                                                                          \
+                                   if (!EXP.status) {                                                                     \
+                                       return RESULT;                                                                     \
+                                   }                                                                                      \
 
-#define ASSERT_SUCCESS_CODE(EXP)   if (EXP != 0) {                                           \
-                                       return tr_fail("Expected success return code!");      \
-                                   }                                                         \
+#define ASSERT_EQ(EXP, ACT)        if (EXP != ACT) {                                                                      \
+                                       return tr_fail("Expected: Equal, Found: Not Equal! at %s:%d", __FILE__, __LINE__); \
+                                   }                                                                                      \
 
-#define ASSERT_EQ(EXP, ACT)        if (EXP != ACT) {                                         \
-                                       return tr_fail("Expected: Equal, Found: Non Equal!"); \
-                                   }                                                         \
-
-#define ASSERT_TRUE(EXP)           if (EXP != true) {                                        \
-                                       return tr_fail("Expected: True, Found: False!");      \
-                                   }                                                         \
-
-#define ASSERT_FALSE(EXP)          if (EXP != false) {                                       \
-                                       return tr_fail("Expected: False, Found: True!");      \
-                                   }                                                         \
-
-#define ASSERT_NULL(EXP)           if (EXP != NULL) {                                        \
-                                       return tr_fail("Expected: NULL, Found: NON_NULL!");   \
-                                   }                                                         \
+#define ASSERT_ONE(EXP)            ASSERT_EQ(EXP, 1)
+#define ASSERT_ZERO(EXP)           ASSERT_EQ(EXP, 0)
+#define ASSERT_TRUE(EXP)           ASSERT_ONE(EXP)
+#define ASSERT_FALSE(EXP)          ASSERT_ZERO(EXP)
+#define ASSERT_NULL(EXP)           ASSERT_EQ(EXP, NULL)
 
 typedef struct tr_test_result {
     bool status;
@@ -70,16 +47,16 @@ typedef struct {
     tr_test_case *cases[MAX_CASE_IN_SUIT];
 } tr_test_suit;
 
-TR_FORMAT(1)
+SN_FORMAT(1)
 tr_test_result tr_fail(char *fmt, ...);
 
-TR_FORMAT(2)
+SN_FORMAT(2)
 tr_test_result tr_fail_ext(void *data, char *fmt, ...);
 
-TR_FORMAT(1)
+SN_FORMAT(1)
 tr_test_result tr_success(char *fmt, ...);
 
-TR_FORMAT(2)
+SN_FORMAT(2)
 tr_test_result tr_success_ext(void *data, char *fmt, ...);
 
 tr_test_suit *tr_new_suit(const char *name);

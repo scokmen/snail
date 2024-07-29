@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
-#include <snail.h>
 #include "runner/test_runner.h"
+#include "snail.h"
 
 static int *pointer_to_int(int val) {
     int *data = malloc(sizeof(int));
@@ -39,14 +39,14 @@ static tr_test_result assert_dlist_values(sn_dlist_t *list, int* expectations, s
     return test_result;
 }
 
-tr_test_result first_and_last(const void *args) {
+tr_test_result first_and_last(SN_UNUSED const void *args) {
     sn_dlist_t list;
 
     sn_dlist_init(&list, data_destructor);
 
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(1)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(2)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(3)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(3)))
 
     ASSERT_EQ(1, *(int*)sn_dlist_first(&list))
     ASSERT_EQ(3, *(int*)sn_dlist_last(&list))
@@ -56,16 +56,17 @@ tr_test_result first_and_last(const void *args) {
     return tr_success("Passed");
 }
 
-tr_test_result insertion_and_deletion(const void *args) {
+tr_test_result insertion_and_deletion(SN_UNUSED const void *args) {
     void *data;
     sn_dlist_t list;
     tr_test_result test_result;
 
     sn_dlist_init(&list, data_destructor);
 
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(1)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(2)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(3)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(3)))
+
     ASSERT_RESULT(test_result, assert_dlist_values(&list, (int[]){1,2,3}, 3))
 
     data = sn_dlist_pop(&list);
@@ -82,10 +83,10 @@ tr_test_result insertion_and_deletion(const void *args) {
 
     ASSERT_NULL(sn_dlist_pop(&list))
 
-    ASSERT_SUCCESS_CODE(sn_dlist_unshift(&list, pointer_to_int(4)))
+    ASSERT_ZERO(sn_dlist_unshift(&list, pointer_to_int(4)))
     ASSERT_RESULT(test_result, assert_dlist_values(&list, (int[]){4}, 1))
 
-    ASSERT_SUCCESS_CODE(sn_dlist_unshift(&list, pointer_to_int(5)))
+    ASSERT_ZERO(sn_dlist_unshift(&list, pointer_to_int(5)))
     ASSERT_RESULT(test_result, assert_dlist_values(&list, (int[]){5, 4}, 2))
 
     data = sn_dlist_shift(&list);
@@ -103,15 +104,15 @@ tr_test_result insertion_and_deletion(const void *args) {
     return tr_success("Passed");
 }
 
-tr_test_result search_and_get(const void *args) {
+tr_test_result search_and_get(SN_UNUSED const void *args) {
     int key1 = 1, key2 = 10;
     sn_dlist_t list;
 
     sn_dlist_init(&list, data_destructor);
 
-    ASSERT_SUCCESS_CODE( sn_dlist_push(&list, pointer_to_int(3)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(1)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(2)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(3)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
 
     ASSERT_EQ(1, *(int*)sn_dlist_get(&list, &key1, comparator))
     ASSERT_TRUE(sn_dlist_has(&list, &key1, comparator))
@@ -123,15 +124,15 @@ tr_test_result search_and_get(const void *args) {
     return tr_success("Passed");
 }
 
-tr_test_result search_and_del(const void *args) {
+tr_test_result search_and_del(SN_UNUSED const void *args) {
     int key1 = 1, key2 = 10;
     sn_dlist_t list;
 
     sn_dlist_init(&list, data_destructor);
 
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(1)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(2)))
-    ASSERT_SUCCESS_CODE(sn_dlist_push(&list, pointer_to_int(1)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
+    ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
 
     ASSERT_TRUE(sn_dlist_del(&list, &key1, comparator))
     ASSERT_TRUE(sn_dlist_del(&list, &key1, comparator))

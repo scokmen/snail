@@ -1,14 +1,14 @@
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.28.1)
 project(snail LANGUAGES C)
 
 # Variables
 set(CMAKE_C_STANDARD  11)
-set(LIBRARY_PATH      "src")
-set(VENDORS_PATH      "vendors")
-set(TEST_PATH         "test")
-set(SAMPLES_PATH      "samples")
-set(BENCHMARKS_PATH   "benchmark")
-set(TEST_CASES_SOURCE "CTestCases.txt")
+set(LIBRARY_PATH         "src")
+set(VENDORS_PATH         "vendors")
+set(TEST_PATH            "test")
+set(SAMPLES_PATH         "samples")
+set(BENCHMARKS_PATH      "benchmark")
+set(TEST_CASES_SOURCE    "CTestCases.txt")
 
 # CTEST
 include(CTest)
@@ -40,6 +40,20 @@ target_include_directories(pico
 
 
 ########################################################################
+# SHARED                                                               #
+# Shared functions & utilities                                         #
+########################################################################
+function(prepare_artifact project)
+    target_include_directories("${project}"
+            PUBLIC
+            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+            PRIVATE
+            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+    target_link_libraries("${project}" pico uv)
+endfunction()
+
+########################################################################
 # SNAIL                                                                #
 # https://github.com/scokmen/snail                                     #
 ########################################################################
@@ -56,14 +70,7 @@ set(snail_resources
 
 add_library(snail STATIC ${snail_resources})
 
-target_include_directories(snail
-        PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        PRIVATE
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-
-target_link_libraries(snail pico uv)
+prepare_artifact(snail)
 ########################################################################
 
 
@@ -71,12 +78,13 @@ target_link_libraries(snail pico uv)
 # SAMPLES                                                              #
 # /samples/*                                                           #
 ########################################################################
-set(sample_applications
-        "simple_server")
+# Discover the bench files using glob "sample_*.c"
+file(GLOB SAMPLE_FILES "${SAMPLES_PATH}/sample_*.c")
 
-foreach (sample_application IN LISTS sample_applications)
-    add_executable("${sample_application}_sample" "${SAMPLES_PATH}/${sample_application}.c")
-    target_link_libraries("${sample_application}_sample" snail)
+foreach (SAMPLE_FILE IN LISTS SAMPLE_FILES)
+    get_filename_component(SAMPLE_FILE_NAME "${SAMPLE_FILE}" NAME_WLE)
+    add_executable("${SAMPLE_FILE_NAME}" "${SAMPLES_PATH}/${SAMPLE_FILE_NAME}.c")
+    target_link_libraries("${SAMPLE_FILE_NAME}" snail)
 endforeach()
 ########################################################################
 
@@ -101,8 +109,8 @@ file(STRINGS "${TEST_CASES_SOURCE}" TEST_FILE_AND_CASES)
 foreach(TEST_FILE_PATH IN LISTS TEST_FILES)
     get_filename_component(TEST_FILE_WITH_SUFFIX "${TEST_FILE_PATH}" NAME_WLE)
     string(REPLACE "_test" "" TEST_FILE "${TEST_FILE_WITH_SUFFIX}")
-    add_executable("${TEST_FILE_WITH_SUFFIX}" ${test_resources} "${TEST_FILE_PATH}")
-    target_link_libraries("${TEST_FILE_WITH_SUFFIX}" snail)
+    add_executable("${TEST_FILE_WITH_SUFFIX}" ${test_resources} ${snail_resources} "${TEST_FILE_PATH}")
+    prepare_artifact("${TEST_FILE_WITH_SUFFIX}")
     foreach(TEST_FILE_AND_CASE IN LISTS TEST_FILE_AND_CASES)
         if (TEST_FILE_AND_CASE MATCHES "^#.*")
             continue()
@@ -125,7 +133,7 @@ file(GLOB BENCHMARKS_FILES "${BENCHMARKS_PATH}/*_bench.c")
 
 foreach (BENCHMARKS_FILE IN LISTS BENCHMARKS_FILES)
     get_filename_component(BENCHMARKS_FILE_NAME "${BENCHMARKS_FILE}" NAME_WLE)
-    add_executable("${BENCHMARKS_FILE_NAME}" "${BENCHMARKS_PATH}/${BENCHMARKS_FILE_NAME}.c")
-    target_link_libraries("${BENCHMARKS_FILE_NAME}" snail)
+    add_executable("${BENCHMARKS_FILE_NAME}" ${snail_resources} "${BENCHMARKS_PATH}/${BENCHMARKS_FILE_NAME}.c")
+    prepare_artifact("${BENCHMARKS_FILE_NAME}")
 endforeach()
 ########################################################################

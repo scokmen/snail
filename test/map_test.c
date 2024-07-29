@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
-#include <snail.h>
+#include "../include/snail.h"
 #include "runner/test_runner.h"
 
 static int* pointer_to_int(int val) {
@@ -9,7 +9,7 @@ static int* pointer_to_int(int val) {
     return data;
 }
 
-static void key_value_destructor(const char* key, void* data) {
+static void map_destructor(const char* key, void* data) {
     if (key == NULL) {
         exit(EXIT_FAILURE);
     }
@@ -35,15 +35,15 @@ tr_test_result assert_key_value(sn_map_t *map, const char* key, int value) {
     return tr_success("Passed");
 }
 
-tr_test_result crud_operations(const void *args) {
+tr_test_result crud_operations(SN_UNUSED const void *args) {
     sn_map_t map;
     tr_test_result result;
 
-    ASSERT_SUCCESS_CODE(sn_map_init(&map, 255, key_value_destructor))
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-1", pointer_to_int(1)))
+    ASSERT_ZERO(sn_map_init(&map, 255, map_destructor))
+    ASSERT_ZERO(sn_map_set(&map, "key-1", pointer_to_int(1)))
     ASSERT_RESULT(result, assert_key_value(&map, "key-1", 1))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-1", pointer_to_int(2)))
+    ASSERT_ZERO(sn_map_set(&map, "key-1", pointer_to_int(2)))
     ASSERT_RESULT(result, assert_key_value(&map, "key-1", 2))
 
     sn_map_del(&map, "key-1");
@@ -55,21 +55,21 @@ tr_test_result crud_operations(const void *args) {
     return tr_success("Passed");
 }
 
-tr_test_result hash_collisions(const void *args) {
+tr_test_result hash_collisions(SN_UNUSED const void *args) {
     sn_map_t map;
 
-    ASSERT_SUCCESS_CODE(sn_map_init(&map, 1, key_value_destructor))
+    ASSERT_ZERO(sn_map_init(&map, 1, map_destructor))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-1", pointer_to_int(1)))
+    ASSERT_ZERO(sn_map_set(&map, "key-1", pointer_to_int(1)))
     sn_map_del(&map, "key-1");
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-2", pointer_to_int(2)))
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-3", pointer_to_int(3)))
+    ASSERT_ZERO(sn_map_set(&map, "key-2", pointer_to_int(2)))
+    ASSERT_ZERO(sn_map_set(&map, "key-3", pointer_to_int(3)))
     sn_map_del(&map, "key-3");
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-4", pointer_to_int(4)))
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-5", pointer_to_int(5)))
+    ASSERT_ZERO(sn_map_set(&map, "key-4", pointer_to_int(4)))
+    ASSERT_ZERO(sn_map_set(&map, "key-5", pointer_to_int(5)))
     sn_map_del(&map, "key-4");
     sn_map_del(&map, "key-5");
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-6", pointer_to_int(6)))
+    ASSERT_ZERO(sn_map_set(&map, "key-6", pointer_to_int(6)))
 
     ASSERT_FALSE(sn_map_has(&map, "key-1"))
     ASSERT_TRUE(sn_map_has(&map, "key-2"))
@@ -81,33 +81,33 @@ tr_test_result hash_collisions(const void *args) {
     return tr_success("Passed");
 }
 
-tr_test_result map_length(const void *args) {
+tr_test_result map_length(SN_UNUSED const void *args) {
     sn_map_t map;
 
-    ASSERT_SUCCESS_CODE(sn_map_init(&map, 128, key_value_destructor))
+    ASSERT_ZERO(sn_map_init(&map, 128, map_destructor))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-1", pointer_to_int(1)))
+    ASSERT_ZERO(sn_map_set(&map, "key-1", pointer_to_int(1)))
     ASSERT_EQ(1, sn_map_len(&map))
 
     sn_map_del(&map, "key-1");
     ASSERT_EQ(0, sn_map_len(&map))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-2", pointer_to_int(2)))
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-3", pointer_to_int(3)))
+    ASSERT_ZERO(sn_map_set(&map, "key-2", pointer_to_int(2)))
+    ASSERT_ZERO(sn_map_set(&map, "key-3", pointer_to_int(3)))
     ASSERT_EQ(2, sn_map_len(&map))
 
     sn_map_del(&map, "key-3");
     ASSERT_EQ(1, sn_map_len(&map))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-4", pointer_to_int(4)))
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-5", pointer_to_int(5)))
+    ASSERT_ZERO(sn_map_set(&map, "key-4", pointer_to_int(4)))
+    ASSERT_ZERO(sn_map_set(&map, "key-5", pointer_to_int(5)))
     ASSERT_EQ(3, sn_map_len(&map))
 
     sn_map_del(&map, "key-4");
     sn_map_del(&map, "key-5");
     ASSERT_EQ(1, sn_map_len(&map))
 
-    ASSERT_SUCCESS_CODE(sn_map_set(&map, "key-6", pointer_to_int(6)))
+    ASSERT_ZERO(sn_map_set(&map, "key-6", pointer_to_int(6)))
     ASSERT_EQ(2, sn_map_len(&map))
 
     sn_map_destroy(&map);

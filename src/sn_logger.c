@@ -11,9 +11,9 @@ static int min_log_level = LOG_LEVEL_DEBUG;
                                   va_start(args, FMT);                         \
                                   vfprintf(GET_OUTPUT_DEV(LEVEL), fmt, args);  \
                                   va_end(args);                                \
-                              }
+                              }                                                \
 
-void sn_log_set_level(int level) {
+void sn_log_level(int level) {
     if (level <= LOG_LEVEL_DEBUG) {
         min_log_level = LOG_LEVEL_DEBUG;
         return;

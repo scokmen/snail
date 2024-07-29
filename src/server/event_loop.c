@@ -293,7 +293,7 @@ static void on_connection_callback(uv_stream_t *server, int status) {
     }
 }
 
-int sn_listen(int port) {
+int sn_listen(int port, sn_route_group_t *route_group) {
     uv_tcp_t server;
     struct sockaddr_in addr;
 

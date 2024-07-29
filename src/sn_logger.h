@@ -9,7 +9,7 @@
 #define LOG_LEVEL_ERROR (4)
 #define LOG_LEVEL_FATAL (5)
 
-void sn_log_set_level(int level);
+void sn_log_level(int level);
 
 SN_FORMAT(1)
 void sn_log_debug(char *fmt, ...);

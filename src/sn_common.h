@@ -14,6 +14,13 @@
                                                     return SN_ENOMEM;                        \
                                                 }                                            \
 
+#define DELEGATE_IF_ERR(EXP)                   ({                                            \
+                                                    int __err = EXP;                         \
+                                                    if (__err != 0) {                        \
+                                                        return __err;                        \
+                                                    }                                        \
+                                               });                                           \
+
 SN_CONST_FN
 unsigned long djb2_hash(unsigned char *str);
 

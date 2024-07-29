@@ -12,6 +12,7 @@
 #include "headers/http.h"
 #include "headers/router.h"
 
-int sn_listen(int port);
+SN_NONNULL(2)
+int sn_listen(int port, sn_route_group_t *route_group);
 
 #endif //SNAIL_SNAIL_H

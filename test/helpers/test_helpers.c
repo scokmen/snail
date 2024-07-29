@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <netdb.h>
+#include <unistd.h>
 #include "test_helpers.h"
 
-static int open_socket(int attempt, const char *host, const char *port) {
+static int open_socket(const char *host, const char *port, int attempt) {
     int sock_fd, connect_err;
     struct addrinfo hints, *res;
 
@@ -49,7 +49,7 @@ const char *th_random_string(int length) {
         fprintf(stderr, "Cannot allocate memory!\n");
         return NULL;
     }
-    for (int i = 0; i < length; i++){
+    for (int i = 0; i < length; i++) {
         str[i] = (char) (rand() % 26 + 65);
     }
     str[length] = 0;
@@ -84,13 +84,13 @@ int th_read_http_code(int sock_fd) {
                 break;
             }
         } else {
-            void *mem = realloc(response, total_received + byte_received);
-            if (mem == NULL) {
+            void *ptr = realloc(response, total_received + byte_received);
+            if (ptr == NULL) {
                 fprintf(stderr, "Cannot allocate memory!\n");
                 http_code = -1;
                 break;
             }
-            response = mem;
+            response = ptr;
         }
 
         memcpy(response + total_received, buffer, byte_received);
@@ -107,7 +107,7 @@ int th_read_http_code(int sock_fd) {
 int th_connect_server(const char *host, const char *port, int max_attempt, unsigned int backoff) {
     int sock_fd, attempt = 1;
 
-    while ((sock_fd = open_socket(attempt, host, port)) == -1) {
+    while ((sock_fd = open_socket(host, port, attempt)) == -1) {
         sleep(backoff);
         if (attempt >= max_attempt) {
             return -1;

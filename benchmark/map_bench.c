@@ -1,7 +1,7 @@
-#include <snail.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include "snail.h"
 
 typedef struct {
     int val;
@@ -13,7 +13,10 @@ static map_data *new_map_data() {
     return data;
 }
 
-static void key_value_destructor(const char* key, void *data) {
+static void map_destructor(const char* key, void *data) {
+    if (key == NULL) {
+        exit(EXIT_FAILURE);
+    }
     free(data);
 }
 
@@ -46,7 +49,7 @@ static void run_map_bench(int16_t bucket_size, int count, int key_length, int nu
         }
     }
 
-    if (sn_map_init(&map, bucket_size, key_value_destructor) != 0) {
+    if (sn_map_init(&map, bucket_size, map_destructor) != 0) {
         exit(EXIT_FAILURE);
     }
 
