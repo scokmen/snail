@@ -20,26 +20,26 @@ static int comparator(void* given, void* data) {
     return (*(int*)given) - *((int*)data);
 }
 
-static tr_test_result assert_dlist_values(sn_dlist_t *list, int* expectations, size_t limit) {
+static tr_result_t assert_dlist_values(sn_dlist_t *list, int* expectations, size_t limit) {
     int **items = malloc(sizeof (int) * limit);
-    tr_test_result test_result = tr_success("Passed");
+    tr_result_t test_result = tr_passed("Passed");
     sn_dlist_collect(list, (void **) items, limit);
     for (int i = 0; i < limit; i++) {
         if ((*items[i]) != expectations[i]) {
-            test_result = tr_fail("Expected: %d, Found: %d, Index: %d", expectations[i], *items[i], i);
+            test_result = tr_failed("Expected: %d, Found: %d, Index: %d", expectations[i], *items[i], i);
             break;
         }
     }
     free(items);
 
     if (limit != list->size) {
-        test_result = tr_fail("Expected: %zu, Found: %zu", limit, list->size);
+        test_result = tr_failed("Expected: %zu, Found: %zu", limit, list->size);
     }
 
     return test_result;
 }
 
-tr_test_result first_and_last(SN_UNUSED const void *args) {
+tr_result_t first_and_last(SN_UNUSED const void *args) {
     sn_dlist_t list;
 
     sn_dlist_init(&list, data_destructor);
@@ -48,18 +48,18 @@ tr_test_result first_and_last(SN_UNUSED const void *args) {
     ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
     ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(3)))
 
-    ASSERT_EQ(1, *(int*)sn_dlist_first(&list))
-    ASSERT_EQ(3, *(int*)sn_dlist_last(&list))
+    ASSERT_EQ(1, *(int *) sn_dlist_first(&list))
+    ASSERT_EQ(3, *(int *) sn_dlist_last(&list))
 
     sn_dlist_destroy(&list);
 
-    return tr_success("Passed");
+    return tr_passed("Passed");
 }
 
-tr_test_result insertion_and_deletion(SN_UNUSED const void *args) {
+tr_result_t insertion_and_deletion(SN_UNUSED const void *args) {
     void *data;
     sn_dlist_t list;
-    tr_test_result test_result;
+    tr_result_t test_result;
 
     sn_dlist_init(&list, data_destructor);
 
@@ -101,10 +101,10 @@ tr_test_result insertion_and_deletion(SN_UNUSED const void *args) {
 
     sn_dlist_destroy(&list);
 
-    return tr_success("Passed");
+    return tr_passed("Passed");
 }
 
-tr_test_result search_and_get(SN_UNUSED const void *args) {
+tr_result_t search_and_get(SN_UNUSED const void *args) {
     int key1 = 1, key2 = 10;
     sn_dlist_t list;
 
@@ -114,17 +114,17 @@ tr_test_result search_and_get(SN_UNUSED const void *args) {
     ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(1)))
     ASSERT_ZERO(sn_dlist_push(&list, pointer_to_int(2)))
 
-    ASSERT_EQ(1, *(int*)sn_dlist_get(&list, &key1, comparator))
+    ASSERT_EQ(1, *(int *) sn_dlist_get(&list, &key1, comparator))
     ASSERT_TRUE(sn_dlist_has(&list, &key1, comparator))
     ASSERT_NULL(sn_dlist_get(&list, &key2, comparator))
     ASSERT_FALSE(sn_dlist_has(&list, &key2, comparator))
 
     sn_dlist_destroy(&list);
 
-    return tr_success("Passed");
+    return tr_passed("Passed");
 }
 
-tr_test_result search_and_del(SN_UNUSED const void *args) {
+tr_result_t search_and_del(SN_UNUSED const void *args) {
     int key1 = 1, key2 = 10;
     sn_dlist_t list;
 
@@ -142,24 +142,17 @@ tr_test_result search_and_del(SN_UNUSED const void *args) {
 
     sn_dlist_destroy(&list);
 
-    return tr_success("Passed");
+    return tr_passed("Passed");
 }
 
 int main(int argc, char **argv) {
     bool result = false;
-    tr_test_suit *suit = tr_new_suit("sn_dlist_t");
+    tr_suit_t *suit = tr_new_suit("sn_dlist_t", NULL, NULL);
 
-    tr_add_test_case(suit,
-                     tr_new_case("first_and_last", NULL, first_and_last, NULL));
-
-    tr_add_test_case(suit,
-                     tr_new_case("insertion_and_deletion", NULL, insertion_and_deletion, NULL));
-
-    tr_add_test_case(suit,
-                     tr_new_case("search_and_get", NULL, search_and_get, NULL));
-
-    tr_add_test_case(suit,
-                     tr_new_case("search_and_del", NULL, search_and_del, NULL));
+    tr_add_test_case(suit, "first_and_last", first_and_last);
+    tr_add_test_case(suit, "insertion_and_deletion", insertion_and_deletion);
+    tr_add_test_case(suit, "search_and_get", search_and_get);
+    tr_add_test_case(suit, "search_and_del", search_and_del);
 
     result = tr_run_suit(suit, argv, argc);
 

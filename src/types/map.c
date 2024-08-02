@@ -1,35 +1,37 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../sn_common.h"
 #include "snail.h"
+#include "../sn_common.h"
 
-typedef struct {
+struct sn_map_node_s {
     void *data;
     const char *key;
     sn_map_t *map;
-} sn_map_node_t;
+};
 
 static int compare_keys(void *given, void *data) {
-    return strcmp((const char *) given, ((sn_map_node_t *) data)->key);
+    const char *key = given;
+    const char *target = ((struct sn_map_node_s *) data)->key;
+    return key[0] == target[0] ? strcmp(key+1, target+1) : -1;
 }
 
 static void destroy_key_value(void *data) {
-    sn_map_node_t *node = data;
+    struct sn_map_node_s *node = data;
     node->map->destructor(node->key, node->data);
     free(node);
     data = NULL;
 }
 
-static sn_map_node_t *create_node(sn_map_t *map, const char *key, void *data) {
-    sn_map_node_t *node;
-    MALLOC_OR_RETURN_NULL(node, sn_map_node_t, 1)
+static struct sn_map_node_s *create_node(sn_map_t *map, const char *key, void *data) {
+    struct sn_map_node_s *node;
+    MALLOC_OR_RETURN_NULL(node, struct sn_map_node_s, 1)
     node->key = key;
     node->data = data;
     node->map = map;
     return node;
 }
 
-static sn_map_node_t *search_node(sn_map_t *map, const char *key, int *target_bucket) {
+static struct sn_map_node_s *search_node(sn_map_t *map, const char *key, int *target_bucket) {
     *target_bucket = (int) (djb2_hash((unsigned char *) key) % map->bucket_size);
     sn_dlist_t linked_list = map->buckets[*target_bucket];
     if (linked_list.size == 0) {
@@ -62,7 +64,7 @@ size_t sn_map_len(sn_map_t *map) {
 
 int sn_map_set(sn_map_t *map, const char *key, void *data) {
     int bucket;
-    sn_map_node_t *node = search_node(map, key, &bucket);
+    struct sn_map_node_s *node = search_node(map, key, &bucket);
     if (node != NULL) {
         if (map->destructor != NULL) {
             map->destructor(node->key, node->data);
@@ -80,7 +82,7 @@ int sn_map_set(sn_map_t *map, const char *key, void *data) {
 
 void *sn_map_get(sn_map_t *map, const char *key) {
     int bucket;
-    sn_map_node_t *node = search_node(map, key, &bucket);
+    struct sn_map_node_s *node = search_node(map, key, &bucket);
     return (node == NULL) ? NULL : node->data;
 }
 

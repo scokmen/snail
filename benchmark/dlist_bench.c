@@ -6,6 +6,9 @@ typedef struct {
     int val;
 } list_data;
 
+const int NUMBER_OF_ITERATION   = 3;
+const int NUMBER_OF_RAND_ACCESS = 1000;
+
 static list_data *list_data_new(int range) {
     list_data *data = malloc(sizeof(list_data));
     if (data == NULL) {
@@ -23,13 +26,13 @@ static int comparator(void* given, void* data) {
     return (*(int*)given) - ((list_data*)data)->val;
 }
 
-static void run_dlist_bench(int data_range, int num_of_insert, int num_of_iteration, int num_of_random_access) {
+static void run_dlist_bench(int data_range, int num_of_insert) {
     int j;
     void *data;
     sn_dlist_t dlist;
     sn_dlist_init(&dlist, data_destructor);
 
-    for (int iteration = 0; iteration < num_of_iteration; iteration++) {
+    for (int iteration = 0; iteration < NUMBER_OF_ITERATION; iteration++) {
         list_data **list_items = NULL;
 
         // Random Insert
@@ -53,13 +56,13 @@ static void run_dlist_bench(int data_range, int num_of_insert, int num_of_iterat
         sn_dlist_collect(&dlist, (void **) list_items, dlist.size);
 
         // Random Search & Get
-        for (int i = 0; i < num_of_random_access; i++) {
+        for (int i = 0; i < NUMBER_OF_RAND_ACCESS; i++) {
             int key = rand() % data_range;
             sn_dlist_has(&dlist, &key, comparator);
         }
 
         // Random Search & Delete
-        for (int i = 0; i < num_of_random_access; i++) {
+        for (int i = 0; i < NUMBER_OF_RAND_ACCESS; i++) {
             int key = rand() % data_range;
             sn_dlist_del(&dlist, &key, comparator);
         }
@@ -89,26 +92,26 @@ static void run_dlist_bench(int data_range, int num_of_insert, int num_of_iterat
 int main() {
     srand(time(NULL));
 
-    run_dlist_bench(16, 16, 3, 1000);
-    run_dlist_bench(16, 256, 3, 1000);
-    run_dlist_bench(16, 1024, 3, 1000);
-    run_dlist_bench(16, 4096, 3, 1000);
-    run_dlist_bench(64, 16, 3, 1000);
-    run_dlist_bench(64, 256, 3, 1000);
-    run_dlist_bench(64, 1024, 3, 1000);
-    run_dlist_bench(64, 4096, 3, 1000);
-    run_dlist_bench(256, 16, 3, 1000);
-    run_dlist_bench(256, 256, 3, 1000);
-    run_dlist_bench(256, 1024, 3, 1000);
-    run_dlist_bench(256, 4096, 3, 1000);
-    run_dlist_bench(1024, 16, 3, 1000);
-    run_dlist_bench(1024, 256, 3, 1000);
-    run_dlist_bench(1024, 1024, 3, 1000);
-    run_dlist_bench(1024, 4096, 3, 1000);
-    run_dlist_bench(4096, 16, 3, 1000);
-    run_dlist_bench(4096, 256, 3, 1000);
-    run_dlist_bench(4096, 1024, 3, 1000);
-    run_dlist_bench(4096, 4096, 3, 1000);
+    run_dlist_bench(16, 16);
+    run_dlist_bench(16, 256);
+    run_dlist_bench(16, 1024);
+    run_dlist_bench(16, 4096);
+    run_dlist_bench(64, 16);
+    run_dlist_bench(64, 256);
+    run_dlist_bench(64, 1024);
+    run_dlist_bench(64, 4096);
+    run_dlist_bench(256, 16);
+    run_dlist_bench(256, 256);
+    run_dlist_bench(256, 1024);
+    run_dlist_bench(256, 4096);
+    run_dlist_bench(1024, 16);
+    run_dlist_bench(1024, 256);
+    run_dlist_bench(1024, 1024);
+    run_dlist_bench(1024, 4096);
+    run_dlist_bench(4096, 16);
+    run_dlist_bench(4096, 256);
+    run_dlist_bench(4096, 1024);
+    run_dlist_bench(4096, 4096);
 
     exit(EXIT_SUCCESS);
 }

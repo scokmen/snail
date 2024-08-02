@@ -5,22 +5,31 @@
 #include <stdint.h>
 #include <stddef.h>
 
+typedef struct sn_dlist_s sn_dlist_t;
+typedef struct sn_map_s sn_map_t;
+
 typedef void (*sn_data_destructor)(void *data);
 typedef int  (*sn_comparator)     (void *given, void *data);
 typedef void (*sn_map_destructor) (const char *key, void *data);
 
-typedef struct sn_dlist_node_t {
+struct sn_dlist_node_s {
     void *data;
-    struct sn_dlist_node_t *next;
-    struct sn_dlist_node_t *prev;
-} sn_dlist_node_t;
+    struct sn_dlist_node_s *next;
+    struct sn_dlist_node_s *prev;
+};
 
-typedef struct {
+struct sn_dlist_s {
     size_t size;
-    sn_dlist_node_t *head;
-    sn_dlist_node_t *tail;
+    struct sn_dlist_node_s *head;
+    struct sn_dlist_node_s *tail;
     sn_data_destructor destructor;
-} sn_dlist_t;
+};
+
+struct sn_map_s {
+    uint16_t bucket_size;
+    sn_dlist_t *buckets;
+    sn_map_destructor destructor;
+};
 
 SN_NONNULL(1)
 void sn_dlist_init(sn_dlist_t *list, sn_data_destructor destructor);
@@ -60,12 +69,6 @@ void sn_dlist_collect(sn_dlist_t *list, void **items, size_t limit);
 
 SN_NONNULL(1)
 void sn_dlist_destroy(sn_dlist_t *list);
-
-typedef struct {
-    uint16_t bucket_size;
-    sn_dlist_t *buckets;
-    sn_map_destructor destructor;
-} sn_map_t;
 
 SN_NONNULL(1)
 int sn_map_init(sn_map_t *map, uint16_t bucket_size, sn_map_destructor destructor);

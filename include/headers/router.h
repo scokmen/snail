@@ -11,37 +11,39 @@ typedef enum {
     SN_ROUTE_GROUP
 } sn_handler_type;
 
-typedef struct {
-    sn_map_t context;
-} sn_route_ctx_t;
+typedef struct sn_http_req_s sn_http_req_t;
+typedef struct sn_http_res_s sn_http_res_t;
+typedef struct sn_handler_s sn_handler_t;
+typedef struct sn_route_handler_s sn_route_handler_t;
+typedef struct sn_route_group_s sn_route_group_t;
 
-typedef struct {
+typedef sn_http_res_t *(*sn_req_handler)(sn_http_req_t *req);
+
+struct sn_http_req_s {
     const char *path;
     sn_map_t headers;
     sn_map_t queries;
     sn_map_t params;
-} sn_http_req_t;
+};
 
-typedef struct {
+struct sn_http_res_s {
     sn_map_t headers;
-} sn_http_res_t;
+};
 
-typedef sn_http_res_t *(*sn_req_handler)(sn_http_req_t *req, sn_route_ctx_t *ctx);
-
-typedef struct {
+struct sn_handler_s {
     HANDLER_PROPS
-} sn_handler_t;
+};
 
-typedef struct {
+struct sn_route_handler_s {
     HANDLER_PROPS
     sn_http_method_t method;
     sn_req_handler action;
-} sn_route_handler_t;
+};
 
-typedef struct {
+struct sn_route_group_s {
     HANDLER_PROPS
     sn_dlist_t routes;
-} sn_route_group_t;
+};
 
 SN_NONNULL(1, 3, 4)
 void sn_route_handler_init(sn_route_handler_t *route_handler, sn_http_method_t method, const char *path, sn_req_handler handler);
